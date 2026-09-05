@@ -27,6 +27,34 @@ export function createSuccessMessage({
   }`;
 }
 
+export function createSuccessStatusMessage(details, playerId) {
+  const statusMessage = {
+    type: "success",
+    text: createSuccessMessage(details),
+  };
+
+  if (!details.startsFinalTurn) return statusMessage;
+  return {
+    ...statusMessage,
+    targetPlayerId: playerId,
+    otherPlayersText: "Último turno.",
+  };
+}
+
+export function getVisibleStatusMessage(statusMessage, viewerPlayerId) {
+  if (
+    !statusMessage?.targetPlayerId ||
+    statusMessage.targetPlayerId === viewerPlayerId
+  ) {
+    return statusMessage;
+  }
+
+  return {
+    ...statusMessage,
+    text: statusMessage.otherPlayersText ?? statusMessage.text,
+  };
+}
+
 export function createCelebration(resolved, bonusPoints, turnPoints, player) {
   return {
     id: `${Date.now()}-${resolved.word}`,

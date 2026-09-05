@@ -4,6 +4,8 @@ import {
   createCelebration,
   createPlayedWordEntries,
   createSuccessMessage,
+  createSuccessStatusMessage,
+  getVisibleStatusMessage,
 } from "./turnResult.js";
 
 test("convierte palabras resueltas en entradas del historial", () => {
@@ -53,4 +55,26 @@ test("incluye al jugador en la celebración de la palabra", () => {
 
   assert.equal(celebration.playerName, "Ana");
   assert.equal(celebration.points, 8);
+});
+
+test("dirige el aviso detallado de la última ficha sólo a quien la recibió", () => {
+  const statusMessage = createSuccessStatusMessage(
+    {
+      words: [{ word: "casa", points: 8 }],
+      wordPoints: 8,
+      bonusPoints: 0,
+      turnPoints: 8,
+      startsFinalTurn: true,
+    },
+    "player-1",
+  );
+
+  assert.match(
+    getVisibleStatusMessage(statusMessage, "player-1").text,
+    /La bolsa quedó vacía/,
+  );
+  assert.equal(
+    getVisibleStatusMessage(statusMessage, "player-2").text,
+    "Último turno.",
+  );
 });

@@ -10,7 +10,7 @@ import {
 import {
   createCelebration,
   createPlayedWordEntries,
-  createSuccessMessage,
+  createSuccessStatusMessage,
 } from "../game/turnResult.js";
 import { exchangeRackTiles } from "../game/tileExchange.js";
 import { BOARD_LAYOUT } from "../layout/boardLayout.js";
@@ -186,16 +186,18 @@ export function useTurnActions({
           : player,
       ),
     );
-    setStatusMessage({
-      type: "success",
-      text: createSuccessMessage({
-        words: resolved.words,
-        wordPoints: resolved.points,
-        bonusPoints,
-        turnPoints,
-        startsFinalTurn: postTurnAction === "start-final-round",
-      }),
-    });
+    setStatusMessage(
+      createSuccessStatusMessage(
+        {
+          words: resolved.words,
+          wordPoints: resolved.points,
+          bonusPoints,
+          turnPoints,
+          startsFinalTurn: postTurnAction === "start-final-round",
+        },
+        currentPlayer.id,
+      ),
+    );
     setCelebration(
       createCelebration(resolved, bonusPoints, turnPoints, currentPlayer),
     );

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GAME_PHASES } from "../game/constants.js";
 import { createInitialGame } from "../game/gameSetup.js";
+import { getVisibleStatusMessage } from "../game/turnResult.js";
 import {
   createOnlinePublicState,
   hydrateOnlineRoom,
@@ -396,7 +397,12 @@ export function useGameController() {
     pendingTiles: state.pendingTiles,
     isOpeningTurn,
     pendingWordPreview: boardState.pendingWordPreview,
-    statusMessage: state.statusMessage,
+    statusMessage: getVisibleStatusMessage(
+      state.statusMessage,
+      isOnlineGame
+        ? state.onlineSession?.playerId
+        : state.statusMessage?.targetPlayerId,
+    ),
     celebration: state.celebration,
     checking: state.checking || Boolean(onlineSyncRequest),
     darkMode: state.darkMode,
