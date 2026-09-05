@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { GAME_PHASES } from "../game/constants.js";
 import { createInitialGame } from "../game/gameSetup.js";
 import {
@@ -41,6 +41,7 @@ function onlineErrorMessage(error) {
 export function useGameController() {
   const state = useGameState();
   const [onlineSyncRequest, setOnlineSyncRequest] = useState(null);
+  const lastSeenCelebrationId = useRef(null);
   useGamePersistence(state);
 
   const currentPlayer = state.players[state.currentPlayerIndex] ?? null;
@@ -119,6 +120,13 @@ export function useGameController() {
       state.setScorelessTurnCount(hydrated.scorelessTurnCount);
       state.setGameEndReason(hydrated.gameEndReason);
       state.setStatusMessage(hydrated.statusMessage);
+      if (
+        hydrated.celebration?.id &&
+        hydrated.celebration.id !== lastSeenCelebrationId.current
+      ) {
+        lastSeenCelebrationId.current = hydrated.celebration.id;
+        state.setCelebration(hydrated.celebration);
+      }
       state.setPhase(hydrated.phase);
       state.setOnlineSession((current) => ({
         ...current,
@@ -138,6 +146,7 @@ export function useGameController() {
       state.onlineSession?.userId,
       state.setBag,
       state.setCurrentPlayerIndex,
+      state.setCelebration,
       state.setGameEndReason,
       state.setFinalTurnPlayerId,
       state.setOnlineSession,
@@ -294,6 +303,7 @@ export function useGameController() {
         scorelessTurnCount: 0,
         gameEndReason: null,
         statusMessage: null,
+        celebration: null,
       };
       await startOnlineGame({
         gameId: session.gameId,
@@ -322,6 +332,7 @@ export function useGameController() {
       state.setCurrentPlayerIndex(0);
       state.setStatusMessage(null);
       state.setCelebration(null);
+      lastSeenCelebrationId.current = null;
       state.setPlayedWords([]);
       state.setFinalTurnPlayerId(null);
       state.setScorelessTurnCount(0);
@@ -341,6 +352,7 @@ export function useGameController() {
     state.setPendingTiles({});
     state.setStatusMessage(null);
     state.setCelebration(null);
+    lastSeenCelebrationId.current = null;
     state.setPlayedWords([]);
     state.setFinalTurnPlayerId(null);
     state.setCurrentPlayerIndex(0);

@@ -46,6 +46,15 @@ describe("interacción entre el atril y el tablero", () => {
     ).toBeDisabled();
   });
 
+  test("destaca claramente al jugador que tiene el turno", async () => {
+    await startGame();
+    const activePlayer = screen.getByText("Prueba").closest(".player-list__item");
+
+    expect(activePlayer).toHaveClass("player-list__item--active");
+    expect(activePlayer).toHaveAttribute("aria-current", "true");
+    expect(activePlayer).toHaveTextContent("Turno");
+  });
+
   test("ordena las acciones como Retornar, Mezclar, Atril y Cambiar", async () => {
     await startGame();
     const rackSection = screen.getByLabelText("Atril").parentElement;

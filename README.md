@@ -128,7 +128,8 @@ src/
   usando las flechas. En pantallas de más de 1200 px, el área visible del tablero
   se amplía hasta un ancho máximo de 1200 px.
 - Una confirmación válida muestra una celebración breve y anima las fichas de
-  la palabra sin bloquear el siguiente turno.
+  la palabra sin bloquear el siguiente turno. En el modo online aparece para
+  todos los participantes e indica quién jugó y cuántos puntos obtuvo.
 - De 1 a 4 jugadores, por turnos, con marcador visible para todos.
 
 ## Modo online con Supabase (opcional)

@@ -196,7 +196,9 @@ export function useTurnActions({
         startsFinalTurn: postTurnAction === "start-final-round",
       }),
     });
-    setCelebration(createCelebration(resolved, bonusPoints, turnPoints));
+    setCelebration(
+      createCelebration(resolved, bonusPoints, turnPoints, currentPlayer),
+    );
     setScorelessTurnCount(0);
 
     if (postTurnAction === "gameover") {

@@ -19,6 +19,7 @@ export function createOnlinePublicState(state) {
     scorelessTurnCount: state.scorelessTurnCount,
     gameEndReason: state.gameEndReason,
     statusMessage: state.statusMessage,
+    celebration: state.celebration,
     bagCount: state.bag.length,
     bagCounts: countBagTiles(state.bag),
   };
@@ -58,6 +59,7 @@ export function hydrateOnlineRoom(room, playerId) {
     scorelessTurnCount: publicState.scorelessTurnCount ?? 0,
     gameEndReason: publicState.gameEndReason ?? null,
     statusMessage: publicState.statusMessage ?? null,
+    celebration: publicState.celebration ?? null,
     stateVersion: game?.state_version ?? 0,
     bagCount: publicState.bagCount ?? 0,
     bagCounts: publicState.bagCounts ?? {},

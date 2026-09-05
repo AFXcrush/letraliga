@@ -27,7 +27,7 @@ export function createSuccessMessage({
   }`;
 }
 
-export function createCelebration(resolved, bonusPoints, turnPoints) {
+export function createCelebration(resolved, bonusPoints, turnPoints, player) {
   return {
     id: `${Date.now()}-${resolved.word}`,
     word: resolved.word,
@@ -35,6 +35,7 @@ export function createCelebration(resolved, bonusPoints, turnPoints) {
     points: turnPoints,
     wordPoints: resolved.points,
     bonusPoints,
+    playerName: player?.name ?? null,
     cellsKeys: resolved.cellsKeys,
   };
 }

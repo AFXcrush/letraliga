@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  createCelebration,
   createPlayedWordEntries,
   createSuccessMessage,
 } from "./turnResult.js";
@@ -35,4 +36,21 @@ test("avisa que la ronda continúa antes del último turno", () => {
   assert.match(message, /bono de 25/);
   assert.match(message, /ronda continúa/);
   assert.match(message, /último turno/);
+});
+
+test("incluye al jugador en la celebración de la palabra", () => {
+  const celebration = createCelebration(
+    {
+      word: "casa",
+      words: [{ word: "casa" }],
+      points: 8,
+      cellsKeys: ["9-13"],
+    },
+    0,
+    8,
+    { name: "Ana" },
+  );
+
+  assert.equal(celebration.playerName, "Ana");
+  assert.equal(celebration.points, 8);
 });

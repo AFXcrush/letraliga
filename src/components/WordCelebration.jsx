@@ -27,7 +27,11 @@ export default function WordCelebration({ celebration, onDismiss }) {
         ))}
       </div>
       <div className="word-celebration__card" key={celebration.id}>
-        <span className="word-celebration__eyebrow">¡Palabra correcta!</span>
+        <span className="word-celebration__eyebrow">
+          {celebration.playerName
+            ? `${celebration.playerName} confirmó`
+            : "¡Palabra correcta!"}
+        </span>
         <strong className="word-celebration__word">
           {words.map((word) => word.toUpperCase()).join(" + ")}
         </strong>

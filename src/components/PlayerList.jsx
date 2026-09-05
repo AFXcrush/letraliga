@@ -4,13 +4,14 @@ export default function PlayerList({ players, currentPlayerIndex, localPlayerId 
       {players.map((player, i) => (
         <div
           key={player.id}
+          aria-current={i === currentPlayerIndex ? "true" : undefined}
           className={`player-list__item${
             i === currentPlayerIndex ? " player-list__item--active" : ""
           }`}
         >
           <span className="player-list__name">
             {i === currentPlayerIndex && (
-              <span className="player-list__turn-dot" aria-hidden="true" />
+              <span className="player-list__turn-label">Turno</span>
             )}
             {player.name}
             {player.id === localPlayerId && " (tú)"}
