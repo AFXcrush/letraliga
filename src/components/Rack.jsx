@@ -51,7 +51,7 @@ export default function Rack({
         onClose={() => setIsExchangeOpen(false)}
         onConfirm={onExchange}
       />
-      <div className="rack-actions" aria-label="Acciones del atril">
+      <div className="rack-actions" aria-label="Acciones antes del atril">
         <button
           type="button"
           className="rack-action"
@@ -70,22 +70,14 @@ export default function Rack({
         >
           <span aria-hidden="true">⇄</span> Mezclar fichas
         </button>
-        <button
-          type="button"
-          className="rack-action"
-          onClick={() => setIsExchangeOpen(true)}
-          disabled={bagCount === 0 || canRecall || disabled}
-          title={
-            canRecall
-              ? "Retorna primero las fichas pendientes al atril"
-              : "Devolver fichas a la bolsa y recibir otras; consume el turno"
-          }
-        >
-          <span aria-hidden="true">🔄</span> Cambiar fichas
-        </button>
       </div>
 
-      <div className="rack" onDragOver={handleDragOver} onDrop={handleDrop}>
+      <div
+        className="rack"
+        aria-label="Atril"
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
         {tiles.length === 0 && <span className="rack__empty">Atril vacío</span>}
         {tiles.map((tile) => (
           <LetterTile
@@ -101,6 +93,20 @@ export default function Rack({
           />
         ))}
       </div>
+
+      <button
+        type="button"
+        className="rack-action rack-action--exchange"
+        onClick={() => setIsExchangeOpen(true)}
+        disabled={bagCount === 0 || canRecall || disabled}
+        title={
+          canRecall
+            ? "Retorna primero las fichas pendientes al atril"
+            : "Devolver fichas a la bolsa y recibir otras; consume el turno"
+        }
+      >
+        <span aria-hidden="true">🔄</span> Cambiar fichas
+      </button>
     </div>
   );
 }

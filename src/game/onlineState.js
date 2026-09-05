@@ -15,7 +15,7 @@ export function createOnlinePublicState(state) {
     currentPlayerId: state.players[state.currentPlayerIndex]?.id ?? null,
     placedTiles: state.placedTiles,
     playedWords: state.playedWords,
-    isFinalTurn: state.isFinalTurn,
+    finalTurnPlayerId: state.finalTurnPlayerId,
     scorelessTurnCount: state.scorelessTurnCount,
     gameEndReason: state.gameEndReason,
     statusMessage: state.statusMessage,
@@ -50,7 +50,11 @@ export function hydrateOnlineRoom(room, playerId) {
     bag: room?.bag ?? [],
     placedTiles: publicState.placedTiles ?? {},
     playedWords: publicState.playedWords ?? [],
-    isFinalTurn: publicState.isFinalTurn ?? false,
+    finalTurnPlayerId:
+      publicState.finalTurnPlayerId ??
+      (publicState.isFinalTurn
+        ? players[publicState.currentPlayerIndex ?? 0]?.id ?? null
+        : null),
     scorelessTurnCount: publicState.scorelessTurnCount ?? 0,
     gameEndReason: publicState.gameEndReason ?? null,
     statusMessage: publicState.statusMessage ?? null,

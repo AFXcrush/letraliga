@@ -109,8 +109,9 @@ src/
 - Usar las siete fichas del atril en una jugada concede un bono de 25 puntos.
 - La pantalla final conserva el tablero visible y destaca la palabra más
   larga y la palabra individual que consiguió mayor puntaje.
-- Cuando una reposición deja la bolsa vacía, el mismo jugador recibe un último
-  turno para utilizar las fichas que acaba de robar; después termina la partida.
+- Cuando una reposición deja la bolsa vacía, la ronda continúa por los demás
+  jugadores. La partida termina después de que el turno vuelve al jugador que
+  robó las últimas fichas y este completa su último turno.
 - El jugador puede cambiar una o más fichas si la bolsa tiene suficientes para
   reemplazarlas. Las fichas devueltas no pueden salir inmediatamente y el cambio
   consume el turno. Antes de ejecutarlo se muestra una segunda confirmación para

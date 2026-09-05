@@ -22,8 +22,11 @@ export function useGameState() {
   const [checking, setChecking] = useState(false);
   const [darkMode, setDarkMode] = useState(savedGame?.darkMode ?? false);
   const [playedWords, setPlayedWords] = useState(savedGame?.playedWords ?? []);
-  const [isFinalTurn, setIsFinalTurn] = useState(
-    savedGame?.isFinalTurn ?? false,
+  const [finalTurnPlayerId, setFinalTurnPlayerId] = useState(
+    savedGame?.finalTurnPlayerId ??
+      (savedGame?.isFinalTurn
+        ? savedGame.players?.[savedGame.currentPlayerIndex]?.id ?? null
+        : null),
   );
   const [scorelessTurnCount, setScorelessTurnCount] = useState(
     savedGame?.scorelessTurnCount ?? 0,
@@ -58,8 +61,8 @@ export function useGameState() {
     setDarkMode,
     playedWords,
     setPlayedWords,
-    isFinalTurn,
-    setIsFinalTurn,
+    finalTurnPlayerId,
+    setFinalTurnPlayerId,
     scorelessTurnCount,
     setScorelessTurnCount,
     gameEndReason,

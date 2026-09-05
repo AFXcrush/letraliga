@@ -2,23 +2,46 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { getPostTurnAction, getScorelessTurnAction } from "./turnFlow.js";
 
-test("inicia un último turno cuando se vacía la bolsa", () => {
+test("inicia la ronda final cuando un jugador roba la última ficha", () => {
   assert.equal(
-    getPostTurnAction({ isFinalTurn: false, remainingBagCount: 0 }),
-    "start-final-turn",
+    getPostTurnAction({
+      finalTurnPlayerId: null,
+      currentPlayerId: "player-1",
+      remainingBagCount: 0,
+    }),
+    "start-final-round",
   );
 });
 
-test("termina la partida después de jugar el último turno", () => {
+test("los oponentes juegan antes del último turno del jugador que vació la bolsa", () => {
   assert.equal(
-    getPostTurnAction({ isFinalTurn: true, remainingBagCount: 0 }),
+    getPostTurnAction({
+      finalTurnPlayerId: "player-1",
+      currentPlayerId: "player-2",
+      remainingBagCount: 0,
+    }),
+    "advance",
+  );
+});
+
+test("termina después del turno final del jugador que vació la bolsa", () => {
+  assert.equal(
+    getPostTurnAction({
+      finalTurnPlayerId: "player-1",
+      currentPlayerId: "player-1",
+      remainingBagCount: 0,
+    }),
     "gameover",
   );
 });
 
 test("avanza normalmente mientras queden fichas", () => {
   assert.equal(
-    getPostTurnAction({ isFinalTurn: false, remainingBagCount: 4 }),
+    getPostTurnAction({
+      finalTurnPlayerId: null,
+      currentPlayerId: "player-1",
+      remainingBagCount: 4,
+    }),
     "advance",
   );
 });

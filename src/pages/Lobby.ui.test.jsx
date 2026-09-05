@@ -28,9 +28,9 @@ describe("lobby online", () => {
     const user = userEvent.setup();
     render(<Lobby />);
 
-    await user.click(screen.getByRole("button", { name: "Jugar online" }));
-    await user.type(screen.getByPlaceholderText("Tu nombre online"), "Ana");
-    await user.click(screen.getByRole("button", { name: "Crear sala" }));
+    await user.click(screen.getByRole("button", { name: /Online/ }));
+    await user.type(screen.getByPlaceholderText("¿Cómo te llamas?"), "Ana");
+    await user.click(screen.getByRole("button", { name: "Crear sala online" }));
 
     expect(game.createOnlineSession).toHaveBeenCalledWith("Ana");
   });
@@ -39,11 +39,26 @@ describe("lobby online", () => {
     const user = userEvent.setup();
     render(<Lobby />);
 
-    await user.click(screen.getByRole("button", { name: "Jugar online" }));
-    await user.type(screen.getByPlaceholderText("Tu nombre online"), "Luis");
-    await user.type(screen.getByPlaceholderText("Código de sala"), "abc123");
-    await user.click(screen.getByRole("button", { name: "Unirse" }));
+    await user.click(screen.getByRole("button", { name: /Online/ }));
+    await user.click(screen.getByRole("button", { name: "Tengo un código" }));
+    await user.type(screen.getByPlaceholderText("¿Cómo te llamas?"), "Luis");
+    await user.type(screen.getByPlaceholderText("ABC123"), "abc123");
+    await user.click(screen.getByRole("button", { name: "Unirme a la sala" }));
 
     expect(game.joinOnlineSession).toHaveBeenCalledWith("ABC123", "Luis");
+  });
+
+  test("muestra sólo el flujo elegido para evitar acciones duplicadas", async () => {
+    const user = userEvent.setup();
+    render(<Lobby />);
+
+    expect(screen.getByRole("button", { name: "Empezar partida local" })).toBeVisible();
+    expect(screen.queryByPlaceholderText("¿Cómo te llamas?")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Online/ }));
+
+    expect(screen.queryByRole("button", { name: "Empezar partida local" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Crear sala online" })).toBeVisible();
+    expect(screen.queryByPlaceholderText("ABC123")).not.toBeInTheDocument();
   });
 });

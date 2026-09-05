@@ -1,7 +1,7 @@
 import { useState } from "react";
+import ThemeToggle from "../components/ThemeToggle.jsx";
 import { useGame } from "../context/GameContext.jsx";
 import { isOnlineGameAvailable } from "../services/onlineGameService.js";
-import ThemeToggle from "../components/ThemeToggle.jsx";
 
 const MAX_PLAYERS = 4;
 
@@ -15,34 +15,39 @@ export default function Lobby() {
     darkMode,
     toggleDarkMode,
   } = useGame();
+  const [mode, setMode] = useState("local");
+  const [onlineAction, setOnlineAction] = useState("create");
   const [names, setNames] = useState([""]);
-  const [error, setError] = useState(null);
-  const [onlineOpen, setOnlineOpen] = useState(false);
   const [onlineName, setOnlineName] = useState("");
   const [roomCode, setRoomCode] = useState("");
+  const [error, setError] = useState(null);
+
+  const selectMode = (nextMode) => {
+    setMode(nextMode);
+    setError(null);
+  };
 
   const updateName = (index, value) => {
-    setNames((prev) => prev.map((n, i) => (i === index ? value : n)));
+    setNames((prev) => prev.map((name, i) => (i === index ? value : name)));
   };
 
   const addPlayer = () => {
-    if (names.length >= MAX_PLAYERS) return;
-    setNames((prev) => [...prev, ""]);
+    if (names.length < MAX_PLAYERS) setNames((prev) => [...prev, ""]);
   };
 
   const removePlayer = (index) => {
     setNames((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const cleaned = names.map((n) => n.trim()).filter(Boolean);
+  const handleLocalSubmit = (event) => {
+    event.preventDefault();
+    const cleaned = names.map((name) => name.trim()).filter(Boolean);
 
     if (cleaned.length === 0) {
       setError("Poné al menos un nombre para jugar.");
       return;
     }
-    if (new Set(cleaned.map((n) => n.toLowerCase())).size !== cleaned.length) {
+    if (new Set(cleaned.map((name) => name.toLowerCase())).size !== cleaned.length) {
       setError("Los nombres de los jugadores deben ser distintos.");
       return;
     }
@@ -51,25 +56,22 @@ export default function Lobby() {
     startGame(cleaned);
   };
 
-  const handleCreateRoom = async () => {
-    const name = onlineName.trim();
-    if (!name) {
-      setError("Escribe tu nombre para crear una sala.");
-      return;
-    }
-    setError(null);
-    await createOnlineSession(name);
-  };
-
-  const handleJoinRoom = async () => {
+  const handleOnlineSubmit = async (event) => {
+    event.preventDefault();
     const name = onlineName.trim();
     const code = roomCode.trim();
-    if (!name || !code) {
-      setError("Escribe tu nombre y el código de seis caracteres.");
+    if (!name) {
+      setError("Escribe tu nombre para jugar online.");
       return;
     }
+    if (onlineAction === "join" && !code) {
+      setError("Escribe el código de seis caracteres de la sala.");
+      return;
+    }
+
     setError(null);
-    await joinOnlineSession(code, name);
+    if (onlineAction === "create") await createOnlineSession(name);
+    else await joinOnlineSession(code, name);
   };
 
   return (
@@ -78,109 +80,144 @@ export default function Lobby() {
         <ThemeToggle darkMode={darkMode} onToggle={toggleDarkMode} />
       </div>
 
-      <div className="lobby__card">
+      <main className="lobby__card">
         <p className="app-title">Letra Liga</p>
-        <h1 className="lobby__heading">Armá tu partida</h1>
-        <p className="lobby__subtitle">
-          De 1 a {MAX_PLAYERS} jugadores, por turnos, en este mismo dispositivo.
-        </p>
+        <h1 className="lobby__heading">Elegí cómo jugar</h1>
+        <p className="lobby__subtitle">Puedes jugar aquí mismo o invitar a otras personas.</p>
 
-        <form className="lobby__form" onSubmit={handleSubmit}>
-          {names.map((name, i) => (
-            <div className="lobby__player-row" key={i}>
+        <div className="lobby__mode-tabs" aria-label="Modo de juego">
+          <button
+            type="button"
+            className={`lobby__mode-tab ${mode === "local" ? "is-active" : ""}`}
+            aria-pressed={mode === "local"}
+            onClick={() => selectMode("local")}
+          >
+            <span aria-hidden="true">🎲</span>
+            En este dispositivo
+          </button>
+          <button
+            type="button"
+            className={`lobby__mode-tab ${mode === "online" ? "is-active" : ""}`}
+            aria-pressed={mode === "online"}
+            onClick={() => selectMode("online")}
+            disabled={!isOnlineGameAvailable}
+          >
+            <span aria-hidden="true">🌐</span>
+            Online
+          </button>
+        </div>
+
+        {mode === "local" ? (
+          <form className="lobby__form" onSubmit={handleLocalSubmit}>
+            <div className="lobby__section-heading">
+              <strong>Jugadores</strong>
+              <span>1 a {MAX_PLAYERS}, compartiendo esta pantalla</span>
+            </div>
+            {names.map((name, index) => (
+              <div className="lobby__player-row" key={index}>
+                <input
+                  type="text"
+                  className="lobby__input"
+                  aria-label={`Nombre del jugador ${index + 1}`}
+                  placeholder={`Jugador ${index + 1}`}
+                  value={name}
+                  maxLength={20}
+                  onChange={(event) => updateName(index, event.target.value)}
+                />
+                {names.length > 1 && (
+                  <button
+                    type="button"
+                    className="lobby__remove"
+                    aria-label={`Quitar jugador ${index + 1}`}
+                    onClick={() => removePlayer(index)}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+
+            {names.length < MAX_PLAYERS && (
+              <button type="button" className="btn btn--ghost" onClick={addPlayer}>
+                + Agregar otro jugador
+              </button>
+            )}
+            {error && <p className="lobby__error">{error}</p>}
+            <button type="submit" className="btn btn--primary lobby__submit">
+              Empezar partida local
+            </button>
+          </form>
+        ) : (
+          <form className="lobby__form" onSubmit={handleOnlineSubmit}>
+            <label className="lobby__field">
+              <span>Tu nombre</span>
               <input
                 type="text"
                 className="lobby__input"
-                placeholder={`Jugador ${i + 1}`}
-                value={name}
+                placeholder="¿Cómo te llamas?"
+                value={onlineName}
                 maxLength={20}
-                onChange={(e) => updateName(i, e.target.value)}
+                onChange={(event) => setOnlineName(event.target.value)}
               />
-              {names.length > 1 && (
-                <button
-                  type="button"
-                  className="lobby__remove"
-                  aria-label="Quitar jugador"
-                  onClick={() => removePlayer(i)}
-                >
-                  ×
-                </button>
-              )}
-            </div>
-          ))}
+            </label>
 
-          {names.length < MAX_PLAYERS && (
-            <button type="button" className="btn btn--ghost" onClick={addPlayer}>
-              + Agregar jugador
-            </button>
-          )}
-
-          {error && !onlineOpen && <p className="lobby__error">{error}</p>}
-
-          <button type="submit" className="btn btn--primary lobby__submit">
-            Empezar a jugar
-          </button>
-        </form>
-
-        <div className="lobby__separator"><span>o</span></div>
-        <button
-          type="button"
-          className="btn btn--ghost lobby__online-toggle"
-          onClick={() => setOnlineOpen((open) => !open)}
-          disabled={!isOnlineGameAvailable}
-        >
-          {onlineOpen ? "Ocultar modo online" : "Jugar online"}
-        </button>
-
-        {onlineOpen && (
-          <section className="lobby__online" aria-label="Partida online">
-            <input
-              type="text"
-              className="lobby__input"
-              placeholder="Tu nombre online"
-              value={onlineName}
-              maxLength={20}
-              onChange={(event) => setOnlineName(event.target.value)}
-            />
-            <button
-              type="button"
-              className="btn btn--primary"
-              onClick={handleCreateRoom}
-              disabled={checking}
-            >
-              Crear sala
-            </button>
-            <div className="lobby__join-row">
-              <input
-                type="text"
-                className="lobby__input lobby__code-input"
-                placeholder="Código de sala"
-                value={roomCode}
-                maxLength={6}
-                onChange={(event) => setRoomCode(event.target.value.toUpperCase())}
-              />
+            <div className="lobby__online-actions" aria-label="Acción online">
               <button
                 type="button"
-                className="btn btn--ghost"
-                onClick={handleJoinRoom}
-                disabled={checking}
+                className={onlineAction === "create" ? "is-active" : ""}
+                aria-pressed={onlineAction === "create"}
+                onClick={() => {
+                  setOnlineAction("create");
+                  setError(null);
+                }}
               >
-                Unirse
+                Crear una sala
+              </button>
+              <button
+                type="button"
+                className={onlineAction === "join" ? "is-active" : ""}
+                aria-pressed={onlineAction === "join"}
+                onClick={() => {
+                  setOnlineAction("join");
+                  setError(null);
+                }}
+              >
+                Tengo un código
               </button>
             </div>
-          </section>
+
+            {onlineAction === "join" && (
+              <label className="lobby__field">
+                <span>Código de sala</span>
+                <input
+                  type="text"
+                  className="lobby__input lobby__code-input"
+                  placeholder="ABC123"
+                  value={roomCode}
+                  maxLength={6}
+                  autoComplete="off"
+                  onChange={(event) => setRoomCode(event.target.value.toUpperCase())}
+                />
+              </label>
+            )}
+
+            {(error || statusMessage?.type === "error") && (
+              <p className="lobby__error">{error ?? statusMessage.text}</p>
+            )}
+            <button type="submit" className="btn btn--primary lobby__submit" disabled={checking}>
+              {checking
+                ? "Conectando…"
+                : onlineAction === "create"
+                  ? "Crear sala online"
+                  : "Unirme a la sala"}
+            </button>
+          </form>
         )}
 
-        {(error || statusMessage?.type === "error") && onlineOpen && (
-          <p className="lobby__error">{error ?? statusMessage.text}</p>
+        {!isOnlineGameAvailable && (
+          <p className="lobby__note">El modo online estará disponible al conectar Supabase.</p>
         )}
-
-        <p className="lobby__note">
-          {isOnlineGameAvailable
-            ? "Modo online disponible: esta partida podrá sincronizarse con Supabase."
-            : "Jugando en modo local. Conectá Supabase (ver .env.example) para jugar online."}
-        </p>
-      </div>
+      </main>
     </div>
   );
 }

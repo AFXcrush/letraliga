@@ -58,7 +58,7 @@ export function useTurnActions({
   pendingTiles,
   boardForWordCheck,
   isOpeningTurn,
-  isFinalTurn,
+  finalTurnPlayerId,
   setPhase,
   setPlayers,
   setCurrentPlayerIndex,
@@ -69,7 +69,7 @@ export function useTurnActions({
   setCelebration,
   setChecking,
   setPlayedWords,
-  setIsFinalTurn,
+  setFinalTurnPlayerId,
   scorelessTurnCount,
   setScorelessTurnCount,
   setGameEndReason,
@@ -95,7 +95,7 @@ export function useTurnActions({
       });
 
       if (action.gameOver) {
-        setIsFinalTurn(false);
+        setFinalTurnPlayerId(null);
         setGameEndReason(GAME_END_REASONS.SCORELESS_TURNS);
         setPhase(GAME_PHASES.GAME_OVER);
       } else {
@@ -107,7 +107,7 @@ export function useTurnActions({
       players.length,
       scorelessTurnCount,
       setGameEndReason,
-      setIsFinalTurn,
+      setFinalTurnPlayerId,
       setPhase,
       setScorelessTurnCount,
       setStatusMessage,
@@ -163,7 +163,8 @@ export function useTurnActions({
       ...TURN_RACK_RULES,
     });
     const postTurnAction = getPostTurnAction({
-      isFinalTurn,
+      finalTurnPlayerId,
+      currentPlayerId: currentPlayer.id,
       remainingBagCount: replenished.bag.length,
     });
 
@@ -192,18 +193,19 @@ export function useTurnActions({
         wordPoints: resolved.points,
         bonusPoints,
         turnPoints,
-        startsFinalTurn: postTurnAction === "start-final-turn",
+        startsFinalTurn: postTurnAction === "start-final-round",
       }),
     });
     setCelebration(createCelebration(resolved, bonusPoints, turnPoints));
     setScorelessTurnCount(0);
 
     if (postTurnAction === "gameover") {
-      setIsFinalTurn(false);
+      setFinalTurnPlayerId(null);
       setGameEndReason(GAME_END_REASONS.BAG_EMPTY);
       setPhase(GAME_PHASES.GAME_OVER);
-    } else if (postTurnAction === "start-final-turn") {
-      setIsFinalTurn(true);
+    } else if (postTurnAction === "start-final-round") {
+      setFinalTurnPlayerId(currentPlayer.id);
+      advanceTurn();
     } else if (players.length > 0) {
       advanceTurn();
     }
@@ -220,14 +222,14 @@ export function useTurnActions({
     currentPlayer,
     currentPlayerIndex,
     isOpeningTurn,
-    isFinalTurn,
+    finalTurnPlayerId,
     pendingTiles,
     players.length,
     onTurnFinished,
     setBag,
     setCelebration,
     setChecking,
-    setIsFinalTurn,
+    setFinalTurnPlayerId,
     setPendingTiles,
     setPhase,
     setPlacedTiles,
@@ -255,22 +257,30 @@ export function useTurnActions({
     setPendingTiles({});
     setStatusMessage(null);
 
-    if (isFinalTurn) {
-      setIsFinalTurn(false);
+    if (finalTurnPlayerId === currentPlayer.id) {
+      setFinalTurnPlayerId(null);
       setGameEndReason(GAME_END_REASONS.BAG_EMPTY);
       setPhase(GAME_PHASES.GAME_OVER);
+    } else if (finalTurnPlayerId) {
+      setStatusMessage({
+        type: "success",
+        text: "Turno pasado. La ronda final continúa.",
+      });
+      advanceTurn();
     } else {
       finishScorelessTurn();
     }
     onTurnFinished?.();
   }, [
+    advanceTurn,
     canTakeTurn,
+    currentPlayer?.id,
     currentPlayerIndex,
+    finalTurnPlayerId,
     finishScorelessTurn,
-    isFinalTurn,
     onTurnFinished,
     pendingTiles,
-    setIsFinalTurn,
+    setFinalTurnPlayerId,
     setGameEndReason,
     setPendingTiles,
     setPhase,

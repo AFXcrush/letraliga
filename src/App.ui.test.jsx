@@ -18,7 +18,7 @@ async function startGame() {
   const user = userEvent.setup();
   render(<App />);
   await user.type(screen.getByRole("textbox"), "Prueba");
-  await user.click(screen.getByRole("button", { name: "Empezar a jugar" }));
+  await user.click(screen.getByRole("button", { name: "Empezar partida local" }));
   return user;
 }
 
@@ -44,6 +44,17 @@ describe("interacción entre el atril y el tablero", () => {
     expect(
       screen.getByRole("button", { name: "Significados" }),
     ).toBeDisabled();
+  });
+
+  test("ordena las acciones como Retornar, Mezclar, Atril y Cambiar", async () => {
+    await startGame();
+    const rackSection = screen.getByLabelText("Atril").parentElement;
+    const orderedItems = Array.from(rackSection.children).slice(-3);
+
+    expect(orderedItems[0]).toHaveAttribute("aria-label", "Acciones antes del atril");
+    expect(orderedItems[0]).toHaveTextContent(/Retornar al atril.*Mezclar fichas/);
+    expect(orderedItems[1]).toHaveAttribute("aria-label", "Atril");
+    expect(orderedItems[2]).toHaveTextContent("Cambiar fichas");
   });
 
   test("permite jugar pulsando una ficha y luego una casilla", async () => {
@@ -193,7 +204,7 @@ describe("interacción entre el atril y el tablero", () => {
     await user.click(screen.getByRole("button", { name: "Abandonar partida" }));
 
     expect(
-      screen.getByRole("heading", { name: "Armá tu partida" }),
+      screen.getByRole("heading", { name: "Elegí cómo jugar" }),
     ).toBeInTheDocument();
   });
 });

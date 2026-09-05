@@ -16,7 +16,7 @@ test("el estado público online no expone atriles ni el orden de la bolsa", () =
     bag: [{ letter: "A" }, { letter: "A" }, { letter: "B" }],
     placedTiles: {},
     playedWords: [],
-    isFinalTurn: false,
+    finalTurnPlayerId: null,
     scorelessTurnCount: 0,
     gameEndReason: null,
     statusMessage: null,
@@ -27,6 +27,36 @@ test("el estado público online no expone atriles ni el orden de la bolsa", () =
   assert.deepEqual(state.bagCounts, { A: 2, B: 1 });
   assert.equal("players" in state, false);
   assert.equal("bag" in state, false);
+});
+
+test("sincroniza qué jugador tendrá el último turno", () => {
+  const state = createOnlinePublicState({
+    phase: "playing",
+    players: [{ id: "p1" }, { id: "p2" }],
+    currentPlayerIndex: 1,
+    bag: [],
+    placedTiles: {},
+    playedWords: [],
+    finalTurnPlayerId: "p1",
+    scorelessTurnCount: 0,
+  });
+
+  assert.equal(state.finalTurnPlayerId, "p1");
+
+  const hydrated = hydrateOnlineRoom(
+    {
+      game: { status: "playing", public_state: state },
+      players: [
+        { id: "p1", user_id: "u1", name: "Ana", score: 0 },
+        { id: "p2", user_id: "u2", name: "Luis", score: 0 },
+      ],
+      rack: [],
+      bag: [],
+    },
+    "p2",
+  );
+
+  assert.equal(hydrated.finalTurnPlayerId, "p1");
 });
 
 test("hidrata únicamente el atril del jugador conectado", () => {

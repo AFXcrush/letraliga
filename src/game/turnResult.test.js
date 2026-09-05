@@ -22,7 +22,7 @@ test("convierte palabras resueltas en entradas del historial", () => {
   );
 });
 
-test("arma el resumen de puntaje y avisa el último turno", () => {
+test("avisa que la ronda continúa antes del último turno", () => {
   const message = createSuccessMessage({
     words: [{ word: "casa", points: 8 }],
     wordPoints: 8,
@@ -33,5 +33,6 @@ test("arma el resumen de puntaje y avisa el último turno", () => {
 
   assert.match(message, /"CASA" \(8\)/);
   assert.match(message, /bono de 25/);
+  assert.match(message, /ronda continúa/);
   assert.match(message, /último turno/);
 });

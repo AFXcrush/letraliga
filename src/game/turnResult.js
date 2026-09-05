@@ -22,7 +22,7 @@ export function createSuccessMessage({
     bonusPoints ? ` + bono de ${bonusPoints}` : ""
   }. Total: ${turnPoints}.${
     startsFinalTurn
-      ? " La bolsa quedó vacía: tienes un último turno con tus nuevas fichas."
+      ? " La bolsa quedó vacía. La ronda continúa y tendrás un último turno cuando vuelva a ti."
       : ""
   }`;
 }

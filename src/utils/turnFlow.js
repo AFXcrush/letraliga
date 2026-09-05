@@ -1,6 +1,14 @@
-export function getPostTurnAction({ isFinalTurn, remainingBagCount }) {
-  if (isFinalTurn) return "gameover";
-  if (remainingBagCount === 0) return "start-final-turn";
+export function getPostTurnAction({
+  finalTurnPlayerId,
+  currentPlayerId,
+  remainingBagCount,
+}) {
+  if (finalTurnPlayerId && currentPlayerId === finalTurnPlayerId) {
+    return "gameover";
+  }
+  if (!finalTurnPlayerId && remainingBagCount === 0) {
+    return "start-final-round";
+  }
   return "advance";
 }
 

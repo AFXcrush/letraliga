@@ -83,7 +83,7 @@ export function useGameController() {
     pendingTiles: state.pendingTiles,
     boardForWordCheck: boardState.boardForWordCheck,
     isOpeningTurn,
-    isFinalTurn: state.isFinalTurn,
+    finalTurnPlayerId: state.finalTurnPlayerId,
     setPhase: state.setPhase,
     setPlayers: state.setPlayers,
     setCurrentPlayerIndex: state.setCurrentPlayerIndex,
@@ -94,7 +94,7 @@ export function useGameController() {
     setCelebration: state.setCelebration,
     setChecking: state.setChecking,
     setPlayedWords: state.setPlayedWords,
-    setIsFinalTurn: state.setIsFinalTurn,
+    setFinalTurnPlayerId: state.setFinalTurnPlayerId,
     scorelessTurnCount: state.scorelessTurnCount,
     setScorelessTurnCount: state.setScorelessTurnCount,
     setGameEndReason: state.setGameEndReason,
@@ -115,7 +115,7 @@ export function useGameController() {
       state.setPlacedTiles(hydrated.placedTiles);
       state.setPendingTiles({});
       state.setPlayedWords(hydrated.playedWords);
-      state.setIsFinalTurn(hydrated.isFinalTurn);
+      state.setFinalTurnPlayerId(hydrated.finalTurnPlayerId);
       state.setScorelessTurnCount(hydrated.scorelessTurnCount);
       state.setGameEndReason(hydrated.gameEndReason);
       state.setStatusMessage(hydrated.statusMessage);
@@ -139,7 +139,7 @@ export function useGameController() {
       state.setBag,
       state.setCurrentPlayerIndex,
       state.setGameEndReason,
-      state.setIsFinalTurn,
+      state.setFinalTurnPlayerId,
       state.setOnlineSession,
       state.setPendingTiles,
       state.setPhase,
@@ -290,7 +290,7 @@ export function useGameController() {
         bag: initial.bag,
         placedTiles: {},
         playedWords: [],
-        isFinalTurn: false,
+        finalTurnPlayerId: null,
         scorelessTurnCount: 0,
         gameEndReason: null,
         statusMessage: null,
@@ -323,7 +323,7 @@ export function useGameController() {
       state.setStatusMessage(null);
       state.setCelebration(null);
       state.setPlayedWords([]);
-      state.setIsFinalTurn(false);
+      state.setFinalTurnPlayerId(null);
       state.setScorelessTurnCount(0);
       state.setGameEndReason(null);
       state.setPhase(GAME_PHASES.PLAYING);
@@ -342,7 +342,7 @@ export function useGameController() {
     state.setStatusMessage(null);
     state.setCelebration(null);
     state.setPlayedWords([]);
-    state.setIsFinalTurn(false);
+    state.setFinalTurnPlayerId(null);
     state.setCurrentPlayerIndex(0);
     state.setScorelessTurnCount(0);
     state.setGameEndReason(null);
@@ -389,7 +389,10 @@ export function useGameController() {
     checking: state.checking || Boolean(onlineSyncRequest),
     darkMode: state.darkMode,
     playedWords: state.playedWords,
-    isFinalTurn: state.isFinalTurn,
+    isFinalTurn: Boolean(state.finalTurnPlayerId),
+    isFinalTurnOwnerTurn:
+      Boolean(state.finalTurnPlayerId) &&
+      currentPlayer?.id === state.finalTurnPlayerId,
     scorelessTurnCount: state.scorelessTurnCount,
     gameEndReason: state.gameEndReason,
     onlineSession: state.onlineSession,

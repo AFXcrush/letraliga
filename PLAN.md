@@ -27,7 +27,8 @@ rechaza jugadas ilegales con mensajes comprensibles.
 - [x] Mostrar el inventario actual de la bolsa por letra.
 - [x] Mostrar los significados de todas las palabras confirmadas.
 - [x] Permitir elegir y reiniciar la letra representada por un comodín.
-- [x] Dar un último turno al jugador que vacía la bolsa al reponer su atril.
+- [x] Completar la ronda y dar el último turno al jugador que vacía la bolsa al
+  reponer su atril.
 - [x] Restar o transferir los puntos de las fichas restantes al finalizar.
 - [x] Aplicar una bonificación de 25 puntos por usar las siete fichas.
 - [x] Añadir intercambio de fichas con la bolsa consumiendo el turno.

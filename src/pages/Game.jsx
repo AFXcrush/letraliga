@@ -34,6 +34,7 @@ export default function Game() {
     darkMode,
     playedWords,
     isFinalTurn,
+    isFinalTurnOwnerTurn,
     isOnlineGame,
     canTakeTurn,
     onlineSession,
@@ -149,7 +150,13 @@ export default function Game() {
 
       <p className="app-title">
         Letra Liga · {isOnlineGame && `Sala ${onlineSession?.roomCode} · `}
-        {isOnlineGame && !canTakeTurn ? "Esperando a" : isFinalTurn ? "Último turno de" : "Turno de"}{" "}
+        {isOnlineGame && !canTakeTurn
+          ? "Esperando a"
+          : isFinalTurnOwnerTurn
+            ? "Último turno de"
+            : isFinalTurn
+              ? "Ronda final · Turno de"
+              : "Turno de"}{" "}
         {currentPlayer?.name}
       </p>
 
