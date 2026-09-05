@@ -192,7 +192,7 @@ eliminan después de 30 días. El trabajo y su historial pueden revisarse en
 ## Publicación en Netlify
 
 El repositorio incluye `netlify.toml`. Netlify ejecutará `pnpm build`, publicará
-la carpeta `dist` y utilizará Node.js 20. En **Project configuration →
+la carpeta `dist` y utilizará Node.js 22. En **Project configuration →
 Environment variables** deben configurarse:
 
 ```text
