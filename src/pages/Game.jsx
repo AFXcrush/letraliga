@@ -1,0 +1,152 @@
+import { useEffect, useMemo, useState } from "react";
+import Board from "../components/Board.jsx";
+import BagContentsModal from "../components/BagContentsModal.jsx";
+import WordMeaningsModal from "../components/WordMeaningsModal.jsx";
+import PanZoom from "../components/PanZoom.jsx";
+import Rack from "../components/Rack.jsx";
+import PlayerList from "../components/PlayerList.jsx";
+import ThemeToggle from "../components/ThemeToggle.jsx";
+import WordStatusBar from "../components/WordStatusBar.jsx";
+import WordCelebration from "../components/WordCelebration.jsx";
+import { useGame } from "../context/GameContext.jsx";
+
+export default function Game() {
+  const [isBagOpen, setIsBagOpen] = useState(false);
+  const [isMeaningsOpen, setIsMeaningsOpen] = useState(false);
+  const [selectedTileId, setSelectedTileId] = useState(null);
+  const {
+    players,
+    currentPlayerIndex,
+    currentPlayer,
+    tilesRemaining,
+    bag,
+    placedTiles,
+    pendingTiles,
+    pendingWordPreview,
+    statusMessage,
+    celebration,
+    checking,
+    darkMode,
+    playedWords,
+    isFinalTurn,
+    placeTile,
+    returnTileToRack,
+    recallPendingTiles,
+    shuffleRack,
+    assignBlank,
+    confirmWord,
+    passTurn,
+    toggleDarkMode,
+    dismissCelebration,
+  } = useGame();
+
+  const selectedTile = useMemo(
+    () => currentPlayer?.rack.find((tile) => tile.id === selectedTileId) ?? null,
+    [currentPlayer, selectedTileId],
+  );
+
+  useEffect(() => {
+    if (selectedTileId && !selectedTile) setSelectedTileId(null);
+  }, [selectedTile, selectedTileId]);
+
+  const selectRackTile = (tileId) => {
+    setSelectedTileId((currentId) => (currentId === tileId ? null : tileId));
+  };
+
+  const placeSelectedTile = ({ row, col }) => {
+    if (!selectedTile) return;
+    placeTile({ row, col, tile: { ...selectedTile, from: "rack" } });
+    setSelectedTileId(null);
+  };
+
+  return (
+    <div className="app">
+      <WordCelebration
+        celebration={celebration}
+        onDismiss={dismissCelebration}
+      />
+      <BagContentsModal
+        bag={bag}
+        open={isBagOpen}
+        onClose={() => setIsBagOpen(false)}
+      />
+      <WordMeaningsModal
+        playedWords={playedWords}
+        open={isMeaningsOpen}
+        onClose={() => setIsMeaningsOpen(false)}
+      />
+      <div className="app__top-bar">
+        <div className="score-counter">
+          <div className="score-counter__header">
+            <span className="score-counter__label">Fichas en la bolsa</span>
+            <button
+              type="button"
+              className="score-counter__inspect"
+              onClick={() => setIsBagOpen(true)}
+              aria-label="Ver fichas en la bolsa"
+              title="Ver fichas en la bolsa"
+            >
+              👁️
+            </button>
+          </div>
+          <span className="score-counter__value">{tilesRemaining}</span>
+          <button
+            type="button"
+            className="score-counter__meanings"
+            onClick={() => setIsMeaningsOpen(true)}
+            disabled={playedWords.length === 0}
+            title={
+              playedWords.length === 0
+                ? "Confirma una palabra para consultar su significado"
+                : "Ver significados de las palabras confirmadas"
+            }
+          >
+            <span aria-hidden="true">📖</span> Significados
+          </button>
+        </div>
+        <ThemeToggle darkMode={darkMode} onToggle={toggleDarkMode} />
+      </div>
+
+      <PlayerList players={players} currentPlayerIndex={currentPlayerIndex} />
+
+      <p className="app-title">
+        Letra Liga · {isFinalTurn ? "Último turno de" : "Turno de"}{" "}
+        {currentPlayer?.name}
+      </p>
+
+      <PanZoom>
+        {(scale) => (
+          <Board
+            scale={scale}
+            placedTiles={placedTiles}
+            pendingTiles={pendingTiles}
+            celebratingKeys={celebration?.cellsKeys ?? []}
+            onDropTile={placeTile}
+            onSelectCell={placeSelectedTile}
+            hasSelectedTile={Boolean(selectedTile)}
+          />
+        )}
+      </PanZoom>
+
+      <WordStatusBar
+        pendingWordPreview={pendingWordPreview}
+        statusMessage={statusMessage}
+        checking={checking}
+        onConfirm={confirmWord}
+        onPass={passTurn}
+      />
+
+      <Rack
+        tiles={currentPlayer?.rack ?? []}
+        onReturnTile={returnTileToRack}
+        onRecall={recallPendingTiles}
+        onShuffle={shuffleRack}
+        onAssignBlank={assignBlank}
+        onSelectTile={selectRackTile}
+        selectedTileId={selectedTileId}
+        canRecall={Object.keys(pendingTiles).length > 0}
+        disabled={checking}
+      />
+    </div>
+  );
+}
