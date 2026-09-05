@@ -165,17 +165,17 @@ begin
     raise exception 'Player name must contain between 1 and 20 characters';
   end if;
 
-  select * into target_game
-  from public.games
-  where games.room_code = upper(trim(join_code))
+  select g.* into target_game
+  from public.games as g
+  where g.room_code = upper(trim(join_code))
   for update;
 
   if target_game.id is null or target_game.status <> 'waiting' then
     raise exception 'Room is unavailable';
   end if;
   if exists (
-    select 1 from public.game_players
-    where game_id = target_game.id and user_id = (select auth.uid())
+    select 1 from public.game_players as gp
+    where gp.game_id = target_game.id and gp.user_id = (select auth.uid())
   ) then
     return query
       select target_game.id, target_game.room_code, gp.id
@@ -188,8 +188,8 @@ begin
   select slot::smallint into next_turn
   from generate_series(0, 3) as slot
   where not exists (
-    select 1 from public.game_players
-    where game_id = target_game.id and turn_order = slot
+    select 1 from public.game_players as gp
+    where gp.game_id = target_game.id and gp.turn_order = slot
   )
   order by slot
   limit 1;
