@@ -5,6 +5,7 @@ export default function GameOptionsModal({
   onClose,
   onRestart,
   onAbandon,
+  canRestart = true,
 }) {
   useEffect(() => {
     if (!open) return undefined;
@@ -49,9 +50,11 @@ export default function GameOptionsModal({
           <button type="button" className="btn btn--ghost" onClick={onClose}>
             Continuar jugando
           </button>
-          <button type="button" className="btn btn--ghost" onClick={onRestart}>
-            Reiniciar partida
-          </button>
+          {canRestart && (
+            <button type="button" className="btn btn--ghost" onClick={onRestart}>
+              Reiniciar partida
+            </button>
+          )}
           <button type="button" className="btn btn--danger" onClick={onAbandon}>
             Abandonar partida
           </button>

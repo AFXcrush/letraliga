@@ -61,6 +61,58 @@ export async function getOnlineRoom(gameId, client = supabase) {
   return data;
 }
 
+export async function startOnlineGame(
+  { gameId, publicState, bag, racks },
+  client = supabase,
+) {
+  const activeClient = requireClient(client);
+  const { data, error } = await activeClient.rpc("start_game_room", {
+    target_game_id: gameId,
+    initial_public_state: publicState,
+    initial_bag: bag,
+    initial_racks: racks,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function commitOnlineTurn(
+  {
+    gameId,
+    expectedVersion,
+    publicState,
+    bag,
+    rack,
+    score,
+    move = {},
+  },
+  client = supabase,
+) {
+  const activeClient = requireClient(client);
+  const { data, error } = await activeClient.rpc("commit_game_turn", {
+    target_game_id: gameId,
+    expected_state_version: expectedVersion,
+    next_public_state: publicState,
+    next_bag: bag,
+    next_rack: rack,
+    next_score: score,
+    move_words: move.words ?? [],
+    move_points: move.points ?? 0,
+    move_board_delta: move.boardDelta ?? {},
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function leaveOnlineRoom(gameId, client = supabase) {
+  const activeClient = requireClient(client);
+  const { data, error } = await activeClient.rpc("leave_game_room", {
+    target_game_id: gameId,
+  });
+  if (error) throw error;
+  return data;
+}
+
 export function subscribeToOnlineRoom(gameId, onChange, client = supabase) {
   const activeClient = requireClient(client);
   const channel = activeClient

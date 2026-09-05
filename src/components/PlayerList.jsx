@@ -1,4 +1,4 @@
-export default function PlayerList({ players, currentPlayerIndex }) {
+export default function PlayerList({ players, currentPlayerIndex, localPlayerId }) {
   return (
     <div className="player-list" aria-label="Jugadores">
       {players.map((player, i) => (
@@ -13,6 +13,7 @@ export default function PlayerList({ players, currentPlayerIndex }) {
               <span className="player-list__turn-dot" aria-hidden="true" />
             )}
             {player.name}
+            {player.id === localPlayerId && " (tú)"}
           </span>
           <span className="player-list__score">{player.score}</span>
         </div>

@@ -31,6 +31,9 @@ export function useGameState() {
   const [gameEndReason, setGameEndReason] = useState(
     savedGame?.gameEndReason ?? null,
   );
+  const [onlineSession, setOnlineSession] = useState(
+    savedGame?.onlineSession ?? null,
+  );
 
   return {
     phase,
@@ -61,5 +64,7 @@ export function useGameState() {
     setScorelessTurnCount,
     gameEndReason,
     setGameEndReason,
+    onlineSession,
+    setOnlineSession,
   };
 }

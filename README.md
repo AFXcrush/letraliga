@@ -146,17 +146,52 @@ Para habilitar el modo online:
 
 1. Creá un proyecto gratis en [supabase.com](https://supabase.com).
 2. Copiá `.env.example` a `.env` y completá `VITE_SUPABASE_URL` y
-   `VITE_SUPABASE_ANON_KEY` (los encontrás en Project Settings → API).
+   `VITE_SUPABASE_PUBLISHABLE_KEY` (los encontrás en el diálogo Connect o en
+   Project Settings → API Keys). También se admite `VITE_SUPABASE_ANON_KEY`
+   para proyectos que todavía usen la clave pública heredada.
 3. Ejecutá `supabase/schema.sql` en el SQL Editor.
 4. Habilitá Anonymous Sign-Ins en Authentication. El script registra en
    Realtime las tablas públicas necesarias.
 
 El esquema separa la bolsa y los atriles privados de los datos públicos y usa
-políticas RLS. El cliente de `onlineGameService.js` ya define autenticación
-anónima, creación/unión por código, lectura segura y suscripción a la sala.
+políticas RLS. El cliente utiliza autenticación anónima y permite crear o unirse
+a una sala mediante un código de seis caracteres. El anfitrión inicia cuando hay
+al menos dos jugadores y los cambios de tablero, marcador y turno se propagan
+mediante Realtime.
+
+Cada participante recibe únicamente su propio atril. El orden de la bolsa se
+mantiene privado y el estado público conserva sólo las cantidades por letra. Al
+finalizar se revelan los atriles para calcular las penalizaciones. Las funciones
+SQL rechazan acciones fuera de turno y actualizaciones basadas en una versión
+antigua de la partida.
+
+La validación de palabras y el cálculo detallado todavía se ejecutan en el
+cliente. El backend comprueba identidad, turno, versión, tamaño del atril y
+coherencia básica del puntaje; trasladar toda la resolución al servidor queda
+como endurecimiento antitrampas antes de una publicación competitiva.
 
 La conexión vive en `src/services/supabaseClient.js` y el contrato de salas en
 `src/services/onlineGameService.js`. El modo local sigue siendo independiente.
+
+Después de actualizar el código se puede volver a ejecutar
+`supabase/schema.sql` completo: sus tablas, políticas y funciones son
+idempotentes. Para probar desde una misma computadora usa navegadores distintos
+o una ventana privada, porque cada participante necesita una sesión anónima
+independiente.
+
+## Publicación en Netlify
+
+El repositorio incluye `netlify.toml`. Netlify ejecutará `pnpm build`, publicará
+la carpeta `dist` y utilizará Node.js 20. En **Project configuration →
+Environment variables** deben configurarse:
+
+```text
+VITE_SUPABASE_URL
+VITE_SUPABASE_PUBLISHABLE_KEY
+```
+
+El archivo `.env` local está ignorado por Git y no debe subirse. Tampoco se debe
+usar una clave `service_role` o `sb_secret_` en el navegador.
 
 ## Diccionario de validación
 

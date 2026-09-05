@@ -1,14 +1,15 @@
 import { useEffect, useMemo } from "react";
 import { LETTER_DISTRIBUTION } from "../layout/letterData.js";
 
-export default function BagContentsModal({ bag, open, onClose }) {
+export default function BagContentsModal({ bag, bagCounts, total, open, onClose }) {
   const counts = useMemo(() => {
+    if (bagCounts) return new Map(Object.entries(bagCounts));
     const nextCounts = new Map();
     for (const tile of bag) {
       nextCounts.set(tile.letter, (nextCounts.get(tile.letter) ?? 0) + 1);
     }
     return nextCounts;
-  }, [bag]);
+  }, [bag, bagCounts]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -37,7 +38,7 @@ export default function BagContentsModal({ bag, open, onClose }) {
         <header className="bag-modal__header">
           <div>
             <h2 id="bag-modal-title">Fichas en la bolsa</h2>
-            <p>{bag.length} fichas disponibles</p>
+            <p>{total ?? bag.length} fichas disponibles</p>
           </div>
           <button
             type="button"

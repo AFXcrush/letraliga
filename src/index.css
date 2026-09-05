@@ -1278,6 +1278,93 @@ body {
   color: var(--text-soft);
 }
 
+.lobby__separator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 12px;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.lobby__separator::before,
+.lobby__separator::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--panel-border);
+}
+
+.lobby__online-toggle {
+  width: 100%;
+}
+
+.lobby__online {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--tile-bg) 75%, transparent);
+}
+
+.lobby__join-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.lobby__code-input {
+  min-width: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.online-room__card {
+  max-width: 480px;
+}
+
+.online-room__code {
+  width: 100%;
+  display: grid;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 15px;
+  border: 1px dashed var(--accent);
+  border-radius: 12px;
+  background: var(--tile-bg);
+  color: var(--text-strong);
+  cursor: pointer;
+}
+
+.online-room__code strong {
+  color: var(--accent);
+  font-size: 28px;
+  letter-spacing: 0.2em;
+}
+
+.online-room__code span,
+.online-room__waiting {
+  color: var(--text-soft);
+  font-size: 12px;
+}
+
+.online-room .player-list {
+  position: static;
+  transform: none;
+  width: 100%;
+  max-width: none;
+  margin: 0 0 14px;
+}
+
+.online-room__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
 /* ---------- Fin de partida ---------- */
 .game-over {
   position: relative;

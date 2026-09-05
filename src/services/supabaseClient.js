@@ -1,5 +1,5 @@
 // Cliente de Supabase. Si no hay variables de entorno configuradas
-// (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY), la app sigue funcionando
+// (VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY), la app sigue funcionando
 // perfectamente en modo local (pasar y jugar en un solo dispositivo).
 //
 // Para activar el modo online:
@@ -12,10 +12,14 @@ import { createClient } from "@supabase/supabase-js";
 
 const environment = import.meta.env ?? {};
 const supabaseUrl = environment.VITE_SUPABASE_URL;
-const supabaseAnonKey = environment.VITE_SUPABASE_ANON_KEY;
+const supabasePublishableKey =
+  environment.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  environment.VITE_SUPABASE_ANON_KEY;
 
-export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+export const isSupabaseConfigured = Boolean(
+  supabaseUrl && supabasePublishableKey,
+);
 
 export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabasePublishableKey)
   : null;

@@ -97,6 +97,7 @@ export default function Rack({
             onChooseBlank={() => setBlankTileId(tile.id)}
             onSelect={() => onSelectTile?.(tile.id)}
             selected={selectedTileId === tile.id}
+            disabled={disabled}
           />
         ))}
       </div>

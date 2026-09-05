@@ -12,6 +12,7 @@ function tileForRack(tile) {
 }
 
 export function useTileActions({
+  canInteract = true,
   placedTiles,
   pendingTiles,
   currentPlayerIndex,
@@ -21,6 +22,7 @@ export function useTileActions({
 }) {
   const placeTile = useCallback(
     ({ row, col, tile }) => {
+      if (!canInteract) return;
       const key = `${row}-${col}`;
       if (placedTiles[key] || pendingTiles[key]) return;
 
@@ -53,6 +55,7 @@ export function useTileActions({
       setStatusMessage(null);
     },
     [
+      canInteract,
       currentPlayerIndex,
       pendingTiles,
       placedTiles,
@@ -64,6 +67,7 @@ export function useTileActions({
 
   const returnTileToRack = useCallback(
     (tile) => {
+      if (!canInteract) return;
       const key = `${tile.from.row}-${tile.from.col}`;
       if (!pendingTiles[key]) return;
 
@@ -82,6 +86,7 @@ export function useTileActions({
       setStatusMessage(null);
     },
     [
+      canInteract,
       currentPlayerIndex,
       pendingTiles,
       setPendingTiles,
@@ -91,6 +96,7 @@ export function useTileActions({
   );
 
   const recallPendingTiles = useCallback(() => {
+    if (!canInteract) return;
     const returnedTiles = Object.values(pendingTiles).map(tileForRack);
     if (returnedTiles.length === 0) return;
 
@@ -104,6 +110,7 @@ export function useTileActions({
     setPendingTiles({});
     setStatusMessage(null);
   }, [
+    canInteract,
     currentPlayerIndex,
     pendingTiles,
     setPendingTiles,
@@ -113,6 +120,7 @@ export function useTileActions({
 
   const assignBlank = useCallback(
     (tileId, letter) => {
+      if (!canInteract) return;
       setPlayers((players) =>
         players.map((player, index) =>
           index === currentPlayerIndex
@@ -126,10 +134,11 @@ export function useTileActions({
         ),
       );
     },
-    [currentPlayerIndex, setPlayers],
+    [canInteract, currentPlayerIndex, setPlayers],
   );
 
   const shuffleRack = useCallback(() => {
+    if (!canInteract) return;
     setPlayers((players) =>
       players.map((player, index) => {
         if (index !== currentPlayerIndex || player.rack.length < 2) {
@@ -145,7 +154,7 @@ export function useTileActions({
         return { ...player, rack: shuffled };
       }),
     );
-  }, [currentPlayerIndex, setPlayers]);
+  }, [canInteract, currentPlayerIndex, setPlayers]);
 
   return {
     placeTile,

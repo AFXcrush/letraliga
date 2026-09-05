@@ -20,8 +20,10 @@ export default function Game() {
     players,
     currentPlayerIndex,
     currentPlayer,
+    localPlayer,
     tilesRemaining,
     bag,
+    bagCounts,
     placedTiles,
     pendingTiles,
     isOpeningTurn,
@@ -32,6 +34,9 @@ export default function Game() {
     darkMode,
     playedWords,
     isFinalTurn,
+    isOnlineGame,
+    canTakeTurn,
+    onlineSession,
     placeTile,
     returnTileToRack,
     recallPendingTiles,
@@ -44,6 +49,7 @@ export default function Game() {
     dismissCelebration,
     startGame,
     resetToLobby,
+    leaveOnlineSession,
   } = useGame();
 
   const selectedTile = useMemo(
@@ -54,6 +60,10 @@ export default function Game() {
   useEffect(() => {
     if (selectedTileId && !selectedTile) setSelectedTileId(null);
   }, [selectedTile, selectedTileId]);
+
+  useEffect(() => {
+    if (!canTakeTurn) setSelectedTileId(null);
+  }, [canTakeTurn]);
 
   const selectRackTile = (tileId) => {
     setSelectedTileId((currentId) => (currentId === tileId ? null : tileId));
@@ -73,6 +83,8 @@ export default function Game() {
       />
       <BagContentsModal
         bag={bag}
+        bagCounts={bagCounts}
+        total={tilesRemaining}
         open={isBagOpen}
         onClose={() => setIsBagOpen(false)}
       />
@@ -85,7 +97,8 @@ export default function Game() {
         open={isOptionsOpen}
         onClose={() => setIsOptionsOpen(false)}
         onRestart={() => startGame(players.map(({ name }) => name))}
-        onAbandon={resetToLobby}
+        onAbandon={isOnlineGame ? leaveOnlineSession : resetToLobby}
+        canRestart={!isOnlineGame}
       />
       <div className="app__top-bar">
         <div className="score-counter">
@@ -128,10 +141,15 @@ export default function Game() {
         </div>
       </div>
 
-      <PlayerList players={players} currentPlayerIndex={currentPlayerIndex} />
+      <PlayerList
+        players={players}
+        currentPlayerIndex={currentPlayerIndex}
+        localPlayerId={onlineSession?.playerId}
+      />
 
       <p className="app-title">
-        Letra Liga · {isFinalTurn ? "Último turno de" : "Turno de"}{" "}
+        Letra Liga · {isOnlineGame && `Sala ${onlineSession?.roomCode} · `}
+        {isOnlineGame && !canTakeTurn ? "Esperando a" : isFinalTurn ? "Último turno de" : "Turno de"}{" "}
         {currentPlayer?.name}
       </p>
 
@@ -142,9 +160,9 @@ export default function Game() {
             placedTiles={placedTiles}
             pendingTiles={pendingTiles}
             celebratingKeys={celebration?.cellsKeys ?? []}
-            onDropTile={placeTile}
-            onSelectCell={placeSelectedTile}
-            hasSelectedTile={Boolean(selectedTile)}
+            onDropTile={canTakeTurn ? placeTile : undefined}
+            onSelectCell={canTakeTurn ? placeSelectedTile : undefined}
+            hasSelectedTile={canTakeTurn && Boolean(selectedTile)}
           />
         )}
       </PanZoom>
@@ -155,12 +173,13 @@ export default function Game() {
         isOpeningTurn={isOpeningTurn}
         statusMessage={statusMessage}
         checking={checking}
+        disabled={!canTakeTurn}
         onConfirm={confirmWord}
         onPass={passTurn}
       />
 
       <Rack
-        tiles={currentPlayer?.rack ?? []}
+        tiles={localPlayer?.rack ?? []}
         onReturnTile={returnTileToRack}
         onRecall={recallPendingTiles}
         onShuffle={shuffleRack}
@@ -169,7 +188,7 @@ export default function Game() {
         onSelectTile={selectRackTile}
         selectedTileId={selectedTileId}
         canRecall={Object.keys(pendingTiles).length > 0}
-        disabled={checking}
+        disabled={checking || !canTakeTurn}
         bagCount={tilesRemaining}
       />
     </div>

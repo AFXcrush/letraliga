@@ -73,6 +73,8 @@ export function useTurnActions({
   scorelessTurnCount,
   setScorelessTurnCount,
   setGameEndReason,
+  canTakeTurn = true,
+  onTurnFinished,
 }) {
   const advanceTurn = useCallback(() => {
     setCurrentPlayerIndex((index) => (index + 1) % players.length);
@@ -113,6 +115,10 @@ export function useTurnActions({
   );
 
   const confirmWord = useCallback(async () => {
+    if (!canTakeTurn) {
+      setStatusMessage({ type: "error", text: "Espera tu turno para jugar." });
+      return;
+    }
     const pendingKeys = Object.keys(pendingTiles);
     const minimumTiles = isOpeningTurn ? MIN_TILES_FIRST_TURN : 1;
     if (pendingKeys.length < minimumTiles) {
@@ -201,16 +207,23 @@ export function useTurnActions({
     } else if (players.length > 0) {
       advanceTurn();
     }
+    onTurnFinished?.({
+      words: resolved.words,
+      points: turnPoints,
+      boardDelta: resolved.upgradedTiles,
+    });
   }, [
     advanceTurn,
     bag,
     boardForWordCheck,
+    canTakeTurn,
     currentPlayer,
     currentPlayerIndex,
     isOpeningTurn,
     isFinalTurn,
     pendingTiles,
     players.length,
+    onTurnFinished,
     setBag,
     setCelebration,
     setChecking,
@@ -226,6 +239,10 @@ export function useTurnActions({
   ]);
 
   const passTurn = useCallback(() => {
+    if (!canTakeTurn) {
+      setStatusMessage({ type: "error", text: "Espera tu turno para jugar." });
+      return;
+    }
     setPlayers((currentPlayers) =>
       currentPlayers.map((player, index) => {
         if (index !== currentPlayerIndex) return player;
@@ -245,10 +262,13 @@ export function useTurnActions({
     } else {
       finishScorelessTurn();
     }
+    onTurnFinished?.();
   }, [
+    canTakeTurn,
     currentPlayerIndex,
     finishScorelessTurn,
     isFinalTurn,
+    onTurnFinished,
     pendingTiles,
     setIsFinalTurn,
     setGameEndReason,
@@ -260,6 +280,10 @@ export function useTurnActions({
 
   const exchangeTiles = useCallback(
     (tileIds) => {
+      if (!canTakeTurn) {
+        setStatusMessage({ type: "error", text: "Espera tu turno para jugar." });
+        return false;
+      }
       if (Object.keys(pendingTiles).length > 0) {
         setStatusMessage({
           type: "error",
@@ -291,13 +315,16 @@ export function useTurnActions({
           exchange.exchangedCount === 1 ? "ficha" : "fichas"
         }. El cambio consumió tu turno.`,
       );
+      onTurnFinished?.();
       return true;
     },
     [
       bag,
+      canTakeTurn,
       currentPlayer,
       currentPlayerIndex,
       finishScorelessTurn,
+      onTurnFinished,
       pendingTiles,
       setBag,
       setPlayers,

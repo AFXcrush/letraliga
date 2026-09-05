@@ -7,8 +7,10 @@ export default function LetterTile({
   onChooseBlank,
   onSelect,
   selected,
+  disabled = false,
 }) {
   const handleDragStart = (e) => {
+    if (disabled) return;
     e.dataTransfer.setData(
       "application/json",
       JSON.stringify({ id, letter, points, isBlank, from: "rack" }),
@@ -17,6 +19,7 @@ export default function LetterTile({
   };
 
   const handleClick = () => {
+    if (disabled) return;
     if (isBlank && (!letter || selected)) {
       onChooseBlank?.();
       return;
@@ -27,7 +30,8 @@ export default function LetterTile({
   return (
     <button
       className={`letter-tile${selected ? " letter-tile--selected" : ""}`}
-      draggable={!isBlank || Boolean(letter)}
+      draggable={!disabled && (!isBlank || Boolean(letter))}
+      disabled={disabled}
       onDragStart={handleDragStart}
       onClick={handleClick}
       aria-pressed={selected}

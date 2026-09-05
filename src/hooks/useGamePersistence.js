@@ -16,12 +16,14 @@ export function useGamePersistence(state) {
       isFinalTurn: state.isFinalTurn,
       scorelessTurnCount: state.scorelessTurnCount,
       gameEndReason: state.gameEndReason,
+      onlineSession: state.onlineSession,
     });
   }, [
     state.bag,
     state.currentPlayerIndex,
     state.darkMode,
     state.gameEndReason,
+    state.onlineSession,
     state.isFinalTurn,
     state.pendingTiles,
     state.phase,

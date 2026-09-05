@@ -63,9 +63,14 @@ por accidente.
 
 - [x] Definir creación y unión a salas mediante código de seis caracteres.
 - [x] Diseñar las tablas, funciones y políticas de seguridad de Supabase.
-- [ ] Mover el estado autoritativo de la partida al backend.
-- [ ] Sincronizar tablero, jugadores, bolsa y turnos en tiempo real.
-- [ ] Ocultar el atril de cada jugador a los demás participantes.
+- [x] Guardar el estado compartido y aceptar turnos sólo del jugador activo y
+  sobre la versión vigente de la partida.
+- [x] Sincronizar tablero, jugadores, bolsa y turnos en tiempo real.
+- [x] Ocultar el atril y el orden de la bolsa a los demás participantes.
+- [x] Recuperar una sala al recargar mientras se conserve la sesión anónima.
+- [x] Permitir salir de una sala de espera y finalizar una partida abandonada.
+- [ ] Mover la validación del diccionario y la resolución completa de puntaje
+  al backend para obtener protección antitrampas total.
 - [ ] Gestionar reconexiones, jugadores ausentes y partidas abandonadas.
 - [ ] Probar dos o más navegadores jugando simultáneamente.
 
@@ -74,8 +79,7 @@ sin poder alterar datos que no les corresponden.
 
 ## Orden recomendado inmediato
 
-1. Conectar un proyecto Supabase y ejecutar `supabase/schema.sql`.
-2. Mover la resolución autoritativa de turnos al backend.
-3. Sincronizar el estado público y entregar sólo el atril del usuario actual.
-4. Gestionar presencia, reconexiones y abandono de jugadores.
-5. Verificar una partida completa en dos o más navegadores.
+1. Volver a ejecutar `supabase/schema.sql` para instalar las funciones online.
+2. Probar creación, unión y una partida completa en dos navegadores distintos.
+3. Gestionar presencia y expiración de jugadores desconectados.
+4. Mover la validación completa de cada jugada al backend.

@@ -29,6 +29,8 @@ export default function GameOver() {
     getGameHighlights(playedWords);
   const endedByScorelessTurns =
     gameEndReason === GAME_END_REASONS.SCORELESS_TURNS;
+  const endedByPlayerLeaving =
+    gameEndReason === GAME_END_REASONS.PLAYER_LEFT;
   const boardScale = Math.max(
     0.4,
     Math.min(
@@ -56,13 +58,18 @@ export default function GameOver() {
         <section className="game-over__card">
         <p className="app-title">Letra Liga</p>
         <h1 className="lobby__heading">
-          {endedByScorelessTurns
+          {endedByScorelessTurns || endedByPlayerLeaving
             ? "¡Partida finalizada!"
             : "¡Se acabaron las fichas!"}
         </h1>
         {endedByScorelessTurns && (
           <p className="game-over__reason">
             Se completaron dos rondas consecutivas sin confirmar palabras.
+          </p>
+        )}
+        {endedByPlayerLeaving && (
+          <p className="game-over__reason">
+            Un jugador abandonó la sala online.
           </p>
         )}
         <p className="lobby__subtitle">

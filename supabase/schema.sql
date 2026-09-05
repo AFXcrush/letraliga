@@ -185,9 +185,15 @@ begin
     return;
   end if;
 
-  select count(*)::smallint into next_turn
-  from public.game_players where game_id = target_game.id;
-  if next_turn >= 4 then raise exception 'Room is full'; end if;
+  select slot::smallint into next_turn
+  from generate_series(0, 3) as slot
+  where not exists (
+    select 1 from public.game_players
+    where game_id = target_game.id and turn_order = slot
+  )
+  order by slot
+  limit 1;
+  if next_turn is null then raise exception 'Room is full'; end if;
 
   insert into public.game_players (game_id, user_id, name, turn_order)
   values (target_game.id, (select auth.uid()), trim(player_name), next_turn)
@@ -223,17 +229,259 @@ begin
         and r.player_id in (
           select id from public.game_players where game_id = target_game_id
         )
-    )
+    ),
+    'bag', (
+      select b.tiles
+      from public.game_bags b
+      join public.games current_game on current_game.id = b.game_id
+      join public.game_players current_player
+        on current_player.game_id = current_game.id
+       and current_player.id::text = current_game.public_state->>'currentPlayerId'
+      where b.game_id = target_game_id
+        and current_player.user_id = (select auth.uid())
+    ),
+    'racks', case
+      when (select status from public.games where id = target_game_id) in ('finished', 'abandoned')
+      then (
+        select coalesce(
+          jsonb_agg(jsonb_build_object('playerId', r.player_id, 'tiles', r.tiles)),
+          '[]'::jsonb
+        )
+        from public.player_racks r
+        where r.player_id in (
+          select id from public.game_players where game_id = target_game_id
+        )
+      )
+      else null
+    end
   );
+end;
+$$;
+
+create or replace function public.leave_game_room(target_game_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  target_game public.games%rowtype;
+  leaving_player public.game_players%rowtype;
+  replacement_host uuid;
+begin
+  select * into target_game from public.games
+  where id = target_game_id for update;
+  select * into leaving_player from public.game_players
+  where game_id = target_game_id and user_id = (select auth.uid());
+
+  if target_game.id is null or leaving_player.id is null then
+    return false;
+  end if;
+
+  if target_game.status = 'waiting' then
+    delete from public.game_players where id = leaving_player.id;
+    if not exists (select 1 from public.game_players where game_id = target_game_id) then
+      delete from public.games where id = target_game_id;
+    elsif target_game.host_user_id = (select auth.uid()) then
+      select user_id into replacement_host
+      from public.game_players
+      where game_id = target_game_id
+      order by turn_order
+      limit 1;
+      update public.games set host_user_id = replacement_host, updated_at = now()
+      where id = target_game_id;
+    end if;
+    return true;
+  end if;
+
+  if target_game.status = 'playing' then
+    update public.games
+    set status = 'abandoned',
+        public_state = jsonb_set(
+          jsonb_set(public_state, '{phase}', '"gameover"'::jsonb),
+          '{gameEndReason}', '"player-left"'::jsonb
+        ),
+        state_version = state_version + 1,
+        updated_at = now()
+    where id = target_game_id;
+    return true;
+  end if;
+
+  return false;
+end;
+$$;
+
+create or replace function public.start_game_room(
+  target_game_id uuid,
+  initial_public_state jsonb,
+  initial_bag jsonb,
+  initial_racks jsonb
+)
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  target_game public.games%rowtype;
+  rack_entry jsonb;
+  next_version bigint;
+begin
+  select * into target_game from public.games
+  where id = target_game_id for update;
+
+  if target_game.id is null or target_game.host_user_id <> (select auth.uid()) then
+    raise exception 'Only the host can start this room';
+  end if;
+  if target_game.status <> 'waiting' then
+    raise exception 'Room is not waiting';
+  end if;
+  if (select count(*) from public.game_players where game_id = target_game_id) < 2 then
+    raise exception 'At least two players are required';
+  end if;
+  if jsonb_typeof(initial_bag) <> 'array' or jsonb_typeof(initial_racks) <> 'array' then
+    raise exception 'Invalid initial tiles';
+  end if;
+  if jsonb_array_length(initial_racks) <> (
+    select count(*) from public.game_players where game_id = target_game_id
+  ) then
+    raise exception 'Every player needs an initial rack';
+  end if;
+  if not exists (
+    select 1 from public.game_players
+    where game_id = target_game_id
+      and id::text = initial_public_state->>'currentPlayerId'
+  ) then
+    raise exception 'Invalid initial player';
+  end if;
+
+  for rack_entry in select * from jsonb_array_elements(initial_racks)
+  loop
+    update public.player_racks r
+    set tiles = rack_entry->'tiles', updated_at = now()
+    where r.player_id = (rack_entry->>'playerId')::uuid
+      and r.player_id in (
+        select id from public.game_players where game_id = target_game_id
+      );
+  end loop;
+
+  update public.game_bags
+  set tiles = initial_bag, updated_at = now()
+  where game_id = target_game_id;
+
+  next_version := target_game.state_version + 1;
+  update public.games
+  set status = 'playing', public_state = initial_public_state,
+      state_version = next_version, updated_at = now()
+  where id = target_game_id;
+
+  return next_version;
+end;
+$$;
+
+create or replace function public.commit_game_turn(
+  target_game_id uuid,
+  expected_state_version bigint,
+  next_public_state jsonb,
+  next_bag jsonb,
+  next_rack jsonb,
+  next_score integer,
+  move_words jsonb default '[]'::jsonb,
+  move_points integer default 0,
+  move_board_delta jsonb default '{}'::jsonb
+)
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  target_game public.games%rowtype;
+  acting_player public.game_players%rowtype;
+  next_version bigint;
+begin
+  select * into target_game from public.games
+  where id = target_game_id for update;
+  select * into acting_player from public.game_players
+  where game_id = target_game_id and user_id = (select auth.uid());
+
+  if target_game.id is null or acting_player.id is null then
+    raise exception 'Room access denied';
+  end if;
+  if target_game.status <> 'playing' then
+    raise exception 'Game is not active';
+  end if;
+  if target_game.state_version <> expected_state_version then
+    raise exception 'Game state changed; reload the room';
+  end if;
+  if target_game.public_state->>'currentPlayerId' <> acting_player.id::text then
+    raise exception 'It is not your turn';
+  end if;
+  if next_score < 0 or move_points < 0 then
+    raise exception 'Invalid score';
+  end if;
+  if next_score - acting_player.score <> move_points then
+    raise exception 'Score does not match move points';
+  end if;
+  if jsonb_typeof(next_bag) <> 'array' or jsonb_typeof(next_rack) <> 'array' then
+    raise exception 'Invalid tiles';
+  end if;
+  if jsonb_array_length(next_rack) > 7 then
+    raise exception 'Rack contains too many tiles';
+  end if;
+  if (next_public_state->>'bagCount')::integer <> jsonb_array_length(next_bag) then
+    raise exception 'Bag count does not match';
+  end if;
+  if not exists (
+    select 1 from public.game_players
+    where game_id = target_game_id
+      and id::text = next_public_state->>'currentPlayerId'
+  ) and next_public_state->>'phase' <> 'gameover' then
+    raise exception 'Invalid next player';
+  end if;
+
+  update public.player_racks
+  set tiles = next_rack, updated_at = now()
+  where player_id = acting_player.id and user_id = (select auth.uid());
+  update public.game_players
+  set score = next_score, last_seen = now()
+  where id = acting_player.id;
+  update public.game_bags
+  set tiles = next_bag, updated_at = now()
+  where game_id = target_game_id;
+
+  next_version := target_game.state_version + 1;
+  update public.games
+  set public_state = next_public_state,
+      status = case
+        when next_public_state->>'phase' = 'gameover' then 'finished'
+        else 'playing'
+      end,
+      state_version = next_version,
+      updated_at = now()
+  where id = target_game_id;
+
+  if jsonb_array_length(move_words) > 0 then
+    insert into public.moves (game_id, player_id, words, points, board_delta)
+    values (target_game_id, acting_player.id, move_words, move_points, move_board_delta);
+  end if;
+
+  return next_version;
 end;
 $$;
 
 revoke all on function public.create_game_room(text) from public;
 revoke all on function public.join_game_room(text, text) from public;
 revoke all on function public.get_game_room(uuid) from public;
+revoke all on function public.start_game_room(uuid, jsonb, jsonb, jsonb) from public;
+revoke all on function public.commit_game_turn(uuid, bigint, jsonb, jsonb, jsonb, integer, jsonb, integer, jsonb) from public;
+revoke all on function public.leave_game_room(uuid) from public;
 grant execute on function public.create_game_room(text) to authenticated;
 grant execute on function public.join_game_room(text, text) to authenticated;
 grant execute on function public.get_game_room(uuid) to authenticated;
+grant execute on function public.start_game_room(uuid, jsonb, jsonb, jsonb) to authenticated;
+grant execute on function public.commit_game_turn(uuid, bigint, jsonb, jsonb, jsonb, integer, jsonb, integer, jsonb) to authenticated;
+grant execute on function public.leave_game_room(uuid) to authenticated;
 
 -- Postgres Changes requiere añadir explícitamente las tablas a la publicación.
 do $$

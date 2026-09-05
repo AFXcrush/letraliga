@@ -6,6 +6,7 @@ export default function WordStatusBar({
   isOpeningTurn,
   statusMessage,
   checking,
+  disabled = false,
   onConfirm,
   onPass,
 }) {
@@ -57,14 +58,14 @@ export default function WordStatusBar({
       </div>
 
       <div className="word-status-bar__actions">
-        <button type="button" className="btn btn--ghost" onClick={onPass}>
+        <button type="button" className="btn btn--ghost" onClick={onPass} disabled={disabled}>
           Pasar turno
         </button>
         <button
           type="button"
           className="btn btn--primary"
           onClick={onConfirm}
-          disabled={!canConfirm || checking}
+          disabled={!canConfirm || checking || disabled}
         >
           {checking ? "Verificando…" : "Confirmar palabra"}
         </button>
