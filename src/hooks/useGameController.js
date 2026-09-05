@@ -23,6 +23,9 @@ import { useTurnActions } from "./useTurnActions.js";
 
 function onlineErrorMessage(error) {
   const message = error?.message ?? String(error ?? "Error desconocido");
+  if (/gen_random_bytes|function .* does not exist|schema cache/i.test(message)) {
+    return "El esquema de Supabase está desactualizado. Ejecuta nuevamente supabase/schema.sql en el SQL Editor.";
+  }
   if (/Room is unavailable/i.test(message)) {
     return "La sala no existe o ya comenzó.";
   }

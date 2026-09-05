@@ -125,7 +125,7 @@ begin
   end if;
 
   loop
-    new_code := upper(substr(encode(gen_random_bytes(6), 'hex'), 1, 6));
+    new_code := upper(substr(encode(extensions.gen_random_bytes(6), 'hex'), 1, 6));
     exit when not exists (
       select 1 from public.games where games.room_code = new_code
     );
