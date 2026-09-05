@@ -24,6 +24,16 @@ test("evita columnas ambiguas dentro de join_game_room", () => {
   assert.doesNotMatch(joinRoomFunction, /where game_id =/);
 });
 
+test("actualiza la sala recién creada sin referenciar variables inexistentes", () => {
+  const createRoomFunction = schema.match(
+    /create or replace function public\.create_game_room[\s\S]*?\n\$\$;/,
+  )?.[0];
+
+  assert.ok(createRoomFunction, "create_game_room debe existir en el esquema");
+  assert.match(createRoomFunction, /where g\.id = new_game_id/);
+  assert.doesNotMatch(createRoomFunction, /target_game/);
+});
+
 test("programa una limpieza idempotente sin borrar partidas recientes", () => {
   assert.match(schema, /create extension if not exists pg_cron/);
   assert.match(schema, /create or replace function public\.cleanup_expired_game_data\(\)/);

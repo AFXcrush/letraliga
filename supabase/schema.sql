@@ -142,9 +142,9 @@ begin
 
   insert into public.player_racks (player_id, user_id)
   values (new_player_id, (select auth.uid()));
-  update public.games
+  update public.games as g
   set updated_at = now()
-  where id = target_game.id;
+  where g.id = new_game_id;
   insert into public.game_bags (game_id) values (new_game_id);
 
   return query select new_game_id, new_code, new_player_id;
