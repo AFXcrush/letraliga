@@ -23,3 +23,14 @@ test("evita columnas ambiguas dentro de join_game_room", () => {
   assert.match(joinRoomFunction, /gp\.turn_order = slot/);
   assert.doesNotMatch(joinRoomFunction, /where game_id =/);
 });
+
+test("programa una limpieza idempotente sin borrar partidas recientes", () => {
+  assert.match(schema, /create extension if not exists pg_cron/);
+  assert.match(schema, /create or replace function public\.cleanup_expired_game_data\(\)/);
+  assert.match(schema, /'finished', 'abandoned'[\s\S]*interval '24 hours'/);
+  assert.match(schema, /g\.status = 'waiting'[\s\S]*interval '6 hours'/);
+  assert.match(schema, /g\.status = 'playing'[\s\S]*interval '7 days'/);
+  assert.match(schema, /u\.is_anonymous is true[\s\S]*interval '30 days'/);
+  assert.match(schema, /'letra-liga-daily-cleanup'/);
+  assert.match(schema, /select public\.cleanup_expired_game_data\(\)/);
+});

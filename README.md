@@ -181,6 +181,14 @@ idempotentes. Para probar desde una misma computadora usa navegadores distintos
 o una ventana privada, porque cada participante necesita una sesión anónima
 independiente.
 
+El mismo esquema habilita Supabase Cron y registra `letra-liga-daily-cleanup`,
+una limpieza diaria de datos vencidos. Conserva partidas terminadas o
+abandonadas durante 24 horas, salas de espera durante 6 horas y partidas sin
+actividad durante 7 días. Al borrar una partida también elimina en cascada sus
+jugadores, atriles, bolsa y movimientos. Las cuentas anónimas huérfanas se
+eliminan después de 30 días. El trabajo y su historial pueden revisarse en
+**Integrations → Cron → Jobs** dentro de Supabase.
+
 ## Publicación en Netlify
 
 El repositorio incluye `netlify.toml`. Netlify ejecutará `pnpm build`, publicará

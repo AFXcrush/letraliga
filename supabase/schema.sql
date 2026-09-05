@@ -2,6 +2,7 @@
 -- Ejecutar en el SQL Editor de Supabase después de habilitar Anonymous Sign-Ins.
 
 create extension if not exists pgcrypto;
+create extension if not exists pg_cron;
 
 create table if not exists public.games (
   id uuid primary key default gen_random_uuid(),
@@ -141,6 +142,9 @@ begin
 
   insert into public.player_racks (player_id, user_id)
   values (new_player_id, (select auth.uid()));
+  update public.games
+  set updated_at = now()
+  where id = target_game.id;
   insert into public.game_bags (game_id) values (new_game_id);
 
   return query select new_game_id, new_code, new_player_id;
@@ -499,3 +503,55 @@ begin
   alter publication supabase_realtime add table public.moves;
 exception when duplicate_object then null;
 end $$;
+
+-- Conserva el resultado final durante un día y después libera las filas
+-- relacionadas mediante los ON DELETE CASCADE de cada partida.
+create or replace function public.cleanup_expired_game_data()
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  deleted_games integer;
+  deleted_users integer;
+begin
+  delete from public.games as g
+  where
+    (g.status in ('finished', 'abandoned')
+      and g.updated_at < now() - interval '24 hours')
+    or (g.status = 'waiting'
+      and g.updated_at < now() - interval '6 hours')
+    or (g.status = 'playing'
+      and g.updated_at < now() - interval '7 days');
+  get diagnostics deleted_games = row_count;
+
+  -- Supabase no elimina automáticamente las cuentas anónimas. Se conservan
+  -- al menos 30 días y sólo se borran cuando ya no pertenecen a ninguna sala.
+  delete from auth.users as u
+  where u.is_anonymous is true
+    and u.created_at < now() - interval '30 days'
+    and not exists (
+      select 1 from public.games as g where g.host_user_id = u.id
+    )
+    and not exists (
+      select 1 from public.game_players as gp where gp.user_id = u.id
+    );
+  get diagnostics deleted_users = row_count;
+
+  return jsonb_build_object(
+    'deletedGames', deleted_games,
+    'deletedAnonymousUsers', deleted_users
+  );
+end;
+$$;
+
+revoke all on function public.cleanup_expired_game_data() from public, anon, authenticated;
+
+-- pg_cron actualiza el trabajo existente cuando se vuelve a ejecutar este
+-- esquema, por lo que nunca se acumulan programaciones duplicadas.
+select cron.schedule(
+  'letra-liga-daily-cleanup',
+  '15 4 * * *',
+  $cleanup$select public.cleanup_expired_game_data();$cleanup$
+);
