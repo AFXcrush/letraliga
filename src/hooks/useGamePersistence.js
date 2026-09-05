@@ -1,0 +1,34 @@
+import { useEffect } from "react";
+import { saveGameSnapshot } from "../services/gameStorage.js";
+
+export function useGamePersistence(state) {
+  useEffect(() => {
+    saveGameSnapshot({
+      phase: state.phase,
+      players: state.players,
+      currentPlayerIndex: state.currentPlayerIndex,
+      bag: state.bag,
+      placedTiles: state.placedTiles,
+      pendingTiles: state.pendingTiles,
+      statusMessage: state.statusMessage,
+      darkMode: state.darkMode,
+      playedWords: state.playedWords,
+      isFinalTurn: state.isFinalTurn,
+      scorelessTurnCount: state.scorelessTurnCount,
+      gameEndReason: state.gameEndReason,
+    });
+  }, [
+    state.bag,
+    state.currentPlayerIndex,
+    state.darkMode,
+    state.gameEndReason,
+    state.isFinalTurn,
+    state.pendingTiles,
+    state.phase,
+    state.placedTiles,
+    state.playedWords,
+    state.players,
+    state.scorelessTurnCount,
+    state.statusMessage,
+  ]);
+}

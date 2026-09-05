@@ -5,11 +5,14 @@ import { useBoardState } from "./useBoardState.js";
 import { useGameState } from "./useGameState.js";
 import { useTileActions } from "./useTileActions.js";
 import { useTurnActions } from "./useTurnActions.js";
+import { useGamePersistence } from "./useGamePersistence.js";
 
 export function useGameController() {
   const state = useGameState();
+  useGamePersistence(state);
   const currentPlayer = state.players[state.currentPlayerIndex] ?? null;
   const boardState = useBoardState(state.placedTiles, state.pendingTiles);
+  const isOpeningTurn = Object.keys(state.placedTiles).length === 0;
 
   const tileActions = useTileActions({
     placedTiles: state.placedTiles,
@@ -27,6 +30,7 @@ export function useGameController() {
     bag: state.bag,
     pendingTiles: state.pendingTiles,
     boardForWordCheck: boardState.boardForWordCheck,
+    isOpeningTurn,
     isFinalTurn: state.isFinalTurn,
     setPhase: state.setPhase,
     setPlayers: state.setPlayers,
@@ -39,6 +43,9 @@ export function useGameController() {
     setChecking: state.setChecking,
     setPlayedWords: state.setPlayedWords,
     setIsFinalTurn: state.setIsFinalTurn,
+    scorelessTurnCount: state.scorelessTurnCount,
+    setScorelessTurnCount: state.setScorelessTurnCount,
+    setGameEndReason: state.setGameEndReason,
   });
 
   const {
@@ -52,6 +59,8 @@ export function useGameController() {
     setPlayedWords,
     setIsFinalTurn,
     setPhase,
+    setScorelessTurnCount,
+    setGameEndReason,
   } = state;
 
   const startGame = useCallback(
@@ -66,6 +75,8 @@ export function useGameController() {
       setCelebration(null);
       setPlayedWords([]);
       setIsFinalTurn(false);
+      setScorelessTurnCount(0);
+      setGameEndReason(null);
       setPhase(GAME_PHASES.PLAYING);
     },
     [
@@ -79,6 +90,8 @@ export function useGameController() {
       setPlayedWords,
       setPlayers,
       setStatusMessage,
+      setScorelessTurnCount,
+      setGameEndReason,
     ],
   );
 
@@ -93,6 +106,8 @@ export function useGameController() {
     setPlayedWords([]);
     setIsFinalTurn(false);
     setCurrentPlayerIndex(0);
+    setScorelessTurnCount(0);
+    setGameEndReason(null);
   }, [
     setBag,
     setCelebration,
@@ -104,6 +119,8 @@ export function useGameController() {
     setPlayedWords,
     setPlayers,
     setStatusMessage,
+    setScorelessTurnCount,
+    setGameEndReason,
   ]);
 
   const toggleDarkMode = useCallback(
@@ -124,6 +141,7 @@ export function useGameController() {
     tilesRemaining: state.bag.length,
     placedTiles: state.placedTiles,
     pendingTiles: state.pendingTiles,
+    isOpeningTurn,
     pendingWordPreview: boardState.pendingWordPreview,
     statusMessage: state.statusMessage,
     celebration: state.celebration,
@@ -131,6 +149,8 @@ export function useGameController() {
     darkMode: state.darkMode,
     playedWords: state.playedWords,
     isFinalTurn: state.isFinalTurn,
+    scorelessTurnCount: state.scorelessTurnCount,
+    gameEndReason: state.gameEndReason,
     startGame,
     ...tileActions,
     ...turnActions,

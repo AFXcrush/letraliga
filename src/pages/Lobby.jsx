@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useGame } from "../context/GameContext.jsx";
-import { isOnlineModeAvailable } from "../services/gameService.js";
+import { isOnlineGameAvailable } from "../services/onlineGameService.js";
 import ThemeToggle from "../components/ThemeToggle.jsx";
 
 const MAX_PLAYERS = 4;
@@ -91,7 +91,7 @@ export default function Lobby() {
         </form>
 
         <p className="lobby__note">
-          {isOnlineModeAvailable
+          {isOnlineGameAvailable
             ? "Modo online disponible: esta partida podrá sincronizarse con Supabase."
             : "Jugando en modo local. Conectá Supabase (ver .env.example) para jugar online."}
         </p>

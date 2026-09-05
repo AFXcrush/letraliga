@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test } from "vitest";
 import App from "./App.jsx";
+import { saveGameSnapshot } from "./services/gameStorage.js";
 
 function createDataTransfer() {
   const values = new Map();
@@ -59,6 +60,12 @@ describe("interacción entre el atril y el tablero", () => {
 
     expect(centerCell).toHaveTextContent(tileLetter);
     expect(
+      screen.getByText(/Coloca al menos 2 fichas nuevas/),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Confirmar palabra" }),
+    ).toBeDisabled();
+    expect(
       screen.getByRole("button", { name: "Retornar al atril" }),
     ).toBeEnabled();
   });
@@ -81,5 +88,112 @@ describe("interacción entre el atril y el tablero", () => {
     expect(
       screen.getByRole("button", { name: "Retornar al atril" }),
     ).toBeEnabled();
+  });
+
+  test("permite validar una sola ficha nueva después de la apertura", async () => {
+    saveGameSnapshot({
+      phase: "playing",
+      players: [
+        {
+          id: "player-1",
+          name: "Prueba",
+          score: 0,
+          rack: [{ id: "tile-n", letter: "N", points: 1 }],
+        },
+      ],
+      currentPlayerIndex: 0,
+      bag: [],
+      placedTiles: {
+        "9-13": { id: "tile-u", letter: "U", points: 1 },
+      },
+      pendingTiles: {},
+      playedWords: [],
+      isFinalTurn: false,
+      scorelessTurnCount: 0,
+      darkMode: false,
+    });
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.click(screen.getByRole("button", { name: "Ficha N, 1 puntos" }));
+    await user.click(
+      screen.getByRole("button", { name: "Casilla fila 9, columna 14" }),
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Confirmar palabra" }),
+    ).toBeEnabled();
+    expect(screen.getByText("UN (2)")).toBeInTheDocument();
+  });
+
+  test("termina después de dos rondas sin palabras", async () => {
+    const user = await startGame();
+    const passButton = screen.getByRole("button", { name: "Pasar turno" });
+
+    await user.click(passButton);
+    await user.click(screen.getByRole("button", { name: "Pasar turno" }));
+
+    expect(
+      screen.getByRole("heading", { name: "¡Partida finalizada!" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/dos rondas consecutivas/)).toBeInTheDocument();
+  });
+
+  test("permite colocar fichas y recorrer el tablero con teclado", async () => {
+    const user = await startGame();
+    const tile = getFirstRegularTile();
+    const centerCell = screen.getByRole("button", {
+      name: "Casilla fila 9, columna 13, centro",
+    });
+    const rightCell = screen.getByRole("button", {
+      name: "Casilla fila 9, columna 14",
+    });
+
+    tile.focus();
+    await user.keyboard("{Enter}");
+    centerCell.focus();
+    await user.keyboard("{Enter}");
+    expect(centerCell).not.toBeEmptyDOMElement();
+
+    centerCell.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(rightCell).toHaveFocus();
+  });
+
+  test("recupera una partida guardada al volver a cargar la aplicación", () => {
+    saveGameSnapshot({
+      phase: "playing",
+      players: [
+        {
+          id: "saved-player",
+          name: "Partida guardada",
+          score: 12,
+          rack: [],
+        },
+      ],
+      currentPlayerIndex: 0,
+      bag: [],
+      placedTiles: {},
+      pendingTiles: {},
+      playedWords: [],
+      isFinalTurn: false,
+      scorelessTurnCount: 0,
+      darkMode: false,
+    });
+
+    render(<App />);
+
+    expect(screen.getByText(/Turno de Partida guardada/)).toBeInTheDocument();
+    expect(screen.getByText("12")).toBeInTheDocument();
+  });
+
+  test("permite abandonar una partida desde el menú de opciones", async () => {
+    const user = await startGame();
+    await user.click(screen.getByRole("button", { name: /Opciones/ }));
+    await user.click(screen.getByRole("button", { name: "Abandonar partida" }));
+
+    expect(
+      screen.getByRole("heading", { name: "Armá tu partida" }),
+    ).toBeInTheDocument();
   });
 });

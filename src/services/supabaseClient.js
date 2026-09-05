@@ -5,14 +5,14 @@
 // Para activar el modo online:
 //   1. Creá un proyecto en https://supabase.com
 //   2. Copiá .env.example a .env y completá las dos variables
-//   3. Creá las tablas sugeridas en services/gameService.js (comentario de arriba)
-//   4. En gameService.js, las funciones ya están escritas para usar
-//      `supabase` cuando `isSupabaseConfigured` es true.
+//   3. Ejecutá supabase/schema.sql desde el SQL Editor.
+//   4. Las salas se administran desde services/onlineGameService.js.
 
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const environment = import.meta.env ?? {};
+const supabaseUrl = environment.VITE_SUPABASE_URL;
+const supabaseAnonKey = environment.VITE_SUPABASE_ANON_KEY;
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 

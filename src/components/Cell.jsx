@@ -84,6 +84,8 @@ export default function Cell({
       aria-label={`Casilla fila ${row}, columna ${col}${
         type === "star" ? ", centro" : label ? `, ${label}` : ""
       }`}
+      data-row={row}
+      data-col={col}
     >
       {placedTile ? (
         <span className="cell__placed">

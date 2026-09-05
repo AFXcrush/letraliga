@@ -1,5 +1,6 @@
 import { useState } from "react";
 import BlankLetterModal from "./BlankLetterModal.jsx";
+import ExchangeTilesModal from "./ExchangeTilesModal.jsx";
 import LetterTile from "./LetterTile.jsx";
 
 export default function Rack({
@@ -8,12 +9,15 @@ export default function Rack({
   onRecall,
   onShuffle,
   onAssignBlank,
+  onExchange,
   onSelectTile,
   selectedTileId,
   canRecall,
   disabled,
+  bagCount,
 }) {
   const [blankTileId, setBlankTileId] = useState(null);
+  const [isExchangeOpen, setIsExchangeOpen] = useState(false);
   const handleDragOver = (e) => {
     e.preventDefault();
   };
@@ -40,6 +44,13 @@ export default function Rack({
           setBlankTileId(null);
         }}
       />
+      <ExchangeTilesModal
+        tiles={tiles}
+        bagCount={bagCount}
+        open={isExchangeOpen}
+        onClose={() => setIsExchangeOpen(false)}
+        onConfirm={onExchange}
+      />
       <div className="rack-actions" aria-label="Acciones del atril">
         <button
           type="button"
@@ -58,6 +69,19 @@ export default function Rack({
           title="Cambiar el orden de las fichas del atril"
         >
           <span aria-hidden="true">⇄</span> Mezclar fichas
+        </button>
+        <button
+          type="button"
+          className="rack-action"
+          onClick={() => setIsExchangeOpen(true)}
+          disabled={bagCount === 0 || canRecall || disabled}
+          title={
+            canRecall
+              ? "Retorna primero las fichas pendientes al atril"
+              : "Devolver fichas a la bolsa y recibir otras; consume el turno"
+          }
+        >
+          <span aria-hidden="true">🔄</span> Cambiar fichas
         </button>
       </div>
 

@@ -102,6 +102,30 @@ body {
   pointer-events: auto;
 }
 
+.game-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.game-toolbar__options {
+  min-height: 38px;
+  padding: 0 11px;
+  border: 1px solid var(--panel-border);
+  border-radius: 9px;
+  background: var(--panel-bg);
+  color: var(--text-strong);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+}
+
+.game-toolbar__options:hover {
+  border-color: var(--accent);
+}
+
 .app-title {
   color: var(--text-soft);
   letter-spacing: 0.08em;
@@ -121,6 +145,7 @@ body {
   border-radius: 12px;
   background: var(--bg-cream);
   border: 1px solid var(--cell-plain-border);
+  touch-action: none;
 }
 
 .panzoom-container:active {
@@ -131,6 +156,12 @@ body {
   transform-origin: 0 0;
   width: fit-content;
   will-change: transform;
+}
+
+@media (min-width: 1201px) {
+  .panzoom-container {
+    max-width: 1200px;
+  }
 }
 
 .board {
@@ -643,6 +674,107 @@ body {
 
 .bag-modal__legend {
   margin-top: 12px;
+}
+
+/* ---------- Cambio de fichas ---------- */
+.exchange-modal__dialog {
+  width: min(520px, 100%);
+}
+
+.exchange-modal__tiles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.exchange-modal__tile {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  border: 2px solid var(--tile-border);
+  border-radius: 8px;
+  background: var(--tile-bg);
+  color: var(--text-strong);
+  box-shadow: 0 2px 0 var(--tile-shadow);
+  cursor: pointer;
+}
+
+.exchange-modal__tile strong {
+  font-size: 22px;
+}
+
+.exchange-modal__tile small {
+  position: absolute;
+  right: 4px;
+  bottom: 2px;
+}
+
+.exchange-modal__tile--selected {
+  border-color: var(--pending-outline);
+  background: color-mix(in srgb, var(--pending-outline) 18%, var(--tile-bg));
+  transform: translateY(-3px);
+}
+
+.exchange-modal__tile:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.exchange-modal__summary {
+  margin: 16px 0 12px;
+  color: var(--text-soft);
+  font-size: 13px;
+  text-align: center;
+}
+
+.exchange-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.exchange-confirmation {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(8, 12, 20, 0.68);
+  backdrop-filter: blur(3px);
+}
+
+.exchange-confirmation__dialog {
+  width: min(420px, 100%);
+}
+
+.exchange-confirmation__dialog h3 {
+  margin: 0 0 10px;
+  color: var(--text-strong);
+  font-size: 20px;
+}
+
+.exchange-confirmation__dialog p {
+  margin: 0 0 20px;
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+
+/* ---------- Opciones de partida ---------- */
+.game-options__dialog {
+  width: min(430px, 100%);
+}
+
+.game-options__actions {
+  display: grid;
+  gap: 10px;
+}
+
+.btn--danger {
+  border-color: var(--error);
+  background: var(--error-bg);
+  color: var(--error);
 }
 
 /* ---------- Significados de palabras confirmadas ---------- */
@@ -1240,6 +1372,25 @@ body {
   background: color-mix(in srgb, var(--tile-bg) 76%, transparent);
 }
 
+.game-over__reason {
+  margin: -4px 0 10px;
+  color: var(--text-soft);
+  font-size: 13px;
+  text-align: center;
+}
+
+.game-over__score-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.game-over__score-detail small {
+  color: var(--text-soft);
+  font-size: 10px;
+  font-weight: 600;
+}
+
 .game-over__highlight span,
 .game-over__highlight small {
   color: var(--text-soft);
@@ -1266,5 +1417,77 @@ body {
 
   .game-over__highlights {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .app {
+    min-height: 100dvh;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .app__top-bar {
+    position: static;
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .score-counter {
+    padding: 8px 10px;
+  }
+
+  .score-counter__value {
+    font-size: 20px;
+  }
+
+  .game-toolbar {
+    align-items: flex-start;
+  }
+
+  .game-toolbar__options {
+    width: 38px;
+    overflow: hidden;
+    padding: 0;
+    white-space: nowrap;
+    text-indent: 8px;
+  }
+
+  .player-list {
+    max-width: 100%;
+  }
+
+  .panzoom-container {
+    height: 50dvh;
+    min-height: 310px;
+  }
+
+  .word-status-bar {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .word-status-bar__actions {
+    justify-content: stretch;
+  }
+
+  .word-status-bar__actions .btn {
+    flex: 1;
+  }
+
+  .rack-section {
+    margin-top: 0;
+  }
+
+  .rack {
+    gap: 6px;
+    padding: 9px;
+  }
+
+  .letter-tile {
+    width: 42px;
+    height: 42px;
   }
 }

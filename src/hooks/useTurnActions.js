@@ -1,17 +1,28 @@
 import { useCallback } from "react";
-import { GAME_PHASES, RACK_SIZE, TURN_RACK_RULES } from "../game/constants.js";
+import {
+  GAME_END_REASONS,
+  GAME_PHASES,
+  MIN_TILES_FIRST_TURN,
+  RACK_SIZE,
+  SCORELESS_ROUNDS_TO_END,
+  TURN_RACK_RULES,
+} from "../game/constants.js";
 import {
   createCelebration,
   createPlayedWordEntries,
   createSuccessMessage,
 } from "../game/turnResult.js";
+import { exchangeRackTiles } from "../game/tileExchange.js";
 import { BOARD_LAYOUT } from "../layout/boardLayout.js";
 import { checkWordExists } from "../services/dictionary.js";
 import { resetBlankTile } from "../utils/blankTile.js";
 import { resolvePendingWord } from "../utils/boardWords.js";
 import { getFullRackBonus } from "../utils/gameStats.js";
 import { balanceRack } from "../utils/rackBalance.js";
-import { getPostTurnAction } from "../utils/turnFlow.js";
+import {
+  getPostTurnAction,
+  getScorelessTurnAction,
+} from "../utils/turnFlow.js";
 
 async function validateWords(words) {
   return Promise.all(
@@ -46,6 +57,7 @@ export function useTurnActions({
   bag,
   pendingTiles,
   boardForWordCheck,
+  isOpeningTurn,
   isFinalTurn,
   setPhase,
   setPlayers,
@@ -58,17 +70,57 @@ export function useTurnActions({
   setChecking,
   setPlayedWords,
   setIsFinalTurn,
+  scorelessTurnCount,
+  setScorelessTurnCount,
+  setGameEndReason,
 }) {
   const advanceTurn = useCallback(() => {
     setCurrentPlayerIndex((index) => (index + 1) % players.length);
   }, [players.length, setCurrentPlayerIndex]);
 
+  const finishScorelessTurn = useCallback(
+    (message = null) => {
+      const action = getScorelessTurnAction({
+        currentCount: scorelessTurnCount,
+        playerCount: players.length,
+        roundsToEnd: SCORELESS_ROUNDS_TO_END,
+      });
+      const scorelessLimit = players.length * SCORELESS_ROUNDS_TO_END;
+      setScorelessTurnCount(action.nextCount);
+      setStatusMessage({
+        type: "success",
+        text: `${message ?? "Turno pasado."} ${action.nextCount}/${scorelessLimit} turnos consecutivos sin palabra.`,
+      });
+
+      if (action.gameOver) {
+        setIsFinalTurn(false);
+        setGameEndReason(GAME_END_REASONS.SCORELESS_TURNS);
+        setPhase(GAME_PHASES.GAME_OVER);
+      } else {
+        advanceTurn();
+      }
+    },
+    [
+      advanceTurn,
+      players.length,
+      scorelessTurnCount,
+      setGameEndReason,
+      setIsFinalTurn,
+      setPhase,
+      setScorelessTurnCount,
+      setStatusMessage,
+    ],
+  );
+
   const confirmWord = useCallback(async () => {
     const pendingKeys = Object.keys(pendingTiles);
-    if (pendingKeys.length === 0) {
+    const minimumTiles = isOpeningTurn ? MIN_TILES_FIRST_TURN : 1;
+    if (pendingKeys.length < minimumTiles) {
       setStatusMessage({
         type: "error",
-        text: "Coloca al menos una ficha en el tablero.",
+        text: `Coloca al menos ${minimumTiles} ${
+          minimumTiles === 1 ? "ficha nueva" : "fichas nuevas"
+        } en el tablero.`,
       });
       return;
     }
@@ -138,9 +190,11 @@ export function useTurnActions({
       }),
     });
     setCelebration(createCelebration(resolved, bonusPoints, turnPoints));
+    setScorelessTurnCount(0);
 
     if (postTurnAction === "gameover") {
       setIsFinalTurn(false);
+      setGameEndReason(GAME_END_REASONS.BAG_EMPTY);
       setPhase(GAME_PHASES.GAME_OVER);
     } else if (postTurnAction === "start-final-turn") {
       setIsFinalTurn(true);
@@ -153,6 +207,7 @@ export function useTurnActions({
     boardForWordCheck,
     currentPlayer,
     currentPlayerIndex,
+    isOpeningTurn,
     isFinalTurn,
     pendingTiles,
     players.length,
@@ -166,6 +221,8 @@ export function useTurnActions({
     setPlayedWords,
     setPlayers,
     setStatusMessage,
+    setScorelessTurnCount,
+    setGameEndReason,
   ]);
 
   const passTurn = useCallback(() => {
@@ -183,21 +240,70 @@ export function useTurnActions({
 
     if (isFinalTurn) {
       setIsFinalTurn(false);
+      setGameEndReason(GAME_END_REASONS.BAG_EMPTY);
       setPhase(GAME_PHASES.GAME_OVER);
     } else {
-      advanceTurn();
+      finishScorelessTurn();
     }
   }, [
-    advanceTurn,
     currentPlayerIndex,
+    finishScorelessTurn,
     isFinalTurn,
     pendingTiles,
     setIsFinalTurn,
+    setGameEndReason,
     setPendingTiles,
     setPhase,
     setPlayers,
     setStatusMessage,
   ]);
 
-  return { confirmWord, passTurn };
+  const exchangeTiles = useCallback(
+    (tileIds) => {
+      if (Object.keys(pendingTiles).length > 0) {
+        setStatusMessage({
+          type: "error",
+          text: "Retorna las fichas pendientes al atril antes de realizar un cambio.",
+        });
+        return false;
+      }
+
+      const exchange = exchangeRackTiles({
+        rack: currentPlayer.rack,
+        bag,
+        tileIds,
+      });
+      if (exchange.error) {
+        setStatusMessage({ type: "error", text: exchange.error });
+        return false;
+      }
+
+      setBag(exchange.bag);
+      setPlayers((currentPlayers) =>
+        currentPlayers.map((player, index) =>
+          index === currentPlayerIndex
+            ? { ...player, rack: exchange.rack }
+            : player,
+        ),
+      );
+      finishScorelessTurn(
+        `Cambiaste ${exchange.exchangedCount} ${
+          exchange.exchangedCount === 1 ? "ficha" : "fichas"
+        }. El cambio consumió tu turno.`,
+      );
+      return true;
+    },
+    [
+      bag,
+      currentPlayer,
+      currentPlayerIndex,
+      finishScorelessTurn,
+      pendingTiles,
+      setBag,
+      setPlayers,
+      setStatusMessage,
+    ],
+  );
+
+  return { confirmWord, passTurn, exchangeTiles };
 }

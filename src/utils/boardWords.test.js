@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { BOARD_LAYOUT } from "../layout/boardLayout.js";
 import { resolvePendingWord } from "./boardWords.js";
 
 const tiles = {
@@ -14,6 +15,14 @@ function resolve(layout, placedTiles = tiles, pendingKeys = ["0-0", "0-1"]) {
     boardLayout: [layout],
   });
 }
+
+test("las casillas especiales más cercanas a los lados de la estrella son 2L", () => {
+  const centerRow = BOARD_LAYOUT.find((row) => row.includes("star"));
+  const centerCol = centerRow.indexOf("star");
+
+  assert.equal(centerRow[centerCol - 2], "2L");
+  assert.equal(centerRow[centerCol + 2], "2L");
+});
 
 test("suma normalmente cuando no hay multiplicadores", () => {
   const result = resolve(["plain", "plain"]);
@@ -106,4 +115,90 @@ test("suma la palabra principal y la palabra cruzada", () => {
   );
   assert.equal(result.points, 12);
   assert.deepEqual(new Set(result.cellsKeys), new Set(Object.keys(board)));
+});
+
+test("exige que la primera palabra cubra la estrella central", () => {
+  const layout = [
+    ["plain", "plain", "plain"],
+    ["plain", "star", "plain"],
+    ["plain", "plain", "plain"],
+  ];
+  const result = resolvePendingWord({
+    placedTiles: {
+      "0-0": { id: "a", letter: "A", points: 1 },
+      "0-1": { id: "b", letter: "B", points: 3 },
+    },
+    pendingKeys: ["0-0", "0-1"],
+    boardLayout: layout,
+  });
+
+  assert.match(result.error, /estrella central/);
+});
+
+test("acepta la primera palabra cuando una ficha cubre la estrella", () => {
+  const layout = [
+    ["plain", "plain", "plain"],
+    ["plain", "star", "plain"],
+    ["plain", "plain", "plain"],
+  ];
+  const result = resolvePendingWord({
+    placedTiles: {
+      "1-0": { id: "a", letter: "A", points: 1 },
+      "1-1": { id: "b", letter: "B", points: 3 },
+    },
+    pendingKeys: ["1-0", "1-1"],
+    boardLayout: layout,
+  });
+
+  assert.equal(result.error, undefined);
+});
+
+test("rechaza una jugada posterior desconectada", () => {
+  const layout = [
+    ["star", "plain", "plain", "plain"],
+    ["plain", "plain", "plain", "plain"],
+    ["plain", "plain", "plain", "plain"],
+  ];
+  const result = resolvePendingWord({
+    placedTiles: {
+      "0-0": { id: "old", letter: "A", points: 1 },
+      "2-2": { id: "b", letter: "B", points: 3 },
+      "2-3": { id: "c", letter: "C", points: 3 },
+    },
+    pendingKeys: ["2-2", "2-3"],
+    boardLayout: layout,
+  });
+
+  assert.match(result.error, /conectarse/);
+});
+
+test("acepta una jugada posterior conectada por un costado", () => {
+  const layout = [
+    ["star", "plain", "plain"],
+    ["plain", "plain", "plain"],
+  ];
+  const result = resolvePendingWord({
+    placedTiles: {
+      "0-0": { id: "old", letter: "A", points: 1 },
+      "1-0": { id: "b", letter: "B", points: 3 },
+      "1-1": { id: "c", letter: "C", points: 3 },
+    },
+    pendingKeys: ["1-0", "1-1"],
+    boardLayout: layout,
+  });
+
+  assert.equal(result.error, undefined);
+});
+
+test("rechaza espacios vacíos entre fichas de una misma jugada", () => {
+  const result = resolvePendingWord({
+    placedTiles: {
+      "0-0": { id: "a", letter: "A", points: 1 },
+      "0-2": { id: "b", letter: "B", points: 3 },
+    },
+    pendingKeys: ["0-0", "0-2"],
+    boardLayout: [["plain", "plain", "plain"]],
+  });
+
+  assert.match(result.error, /espacios vacíos/);
 });

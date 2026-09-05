@@ -4,6 +4,8 @@ import PanZoom from "../components/PanZoom.jsx";
 import ThemeToggle from "../components/ThemeToggle.jsx";
 import WordCelebration from "../components/WordCelebration.jsx";
 import { getGameHighlights } from "../utils/gameStats.js";
+import { GAME_END_REASONS } from "../game/constants.js";
+import { applyFinalScoring } from "../game/finalScoring.js";
 
 export default function GameOver() {
   const {
@@ -15,12 +17,18 @@ export default function GameOver() {
     dismissCelebration,
     toggleDarkMode,
     resetToLobby,
+    gameEndReason,
   } = useGame();
-  const ranking = [...players].sort((a, b) => b.score - a.score);
+  const ranking = applyFinalScoring(players).sort(
+    (a, b) => b.finalScore - a.finalScore,
+  );
   const winner = ranking[0];
-  const isTie = ranking.length > 1 && ranking[0]?.score === ranking[1]?.score;
+  const isTie =
+    ranking.length > 1 && ranking[0]?.finalScore === ranking[1]?.finalScore;
   const { longestWord, highestScoringWord } =
     getGameHighlights(playedWords);
+  const endedByScorelessTurns =
+    gameEndReason === GAME_END_REASONS.SCORELESS_TURNS;
   const boardScale = Math.max(
     0.4,
     Math.min(
@@ -47,7 +55,16 @@ export default function GameOver() {
       <div className="game-over__overlay">
         <section className="game-over__card">
         <p className="app-title">Letra Liga</p>
-        <h1 className="lobby__heading">¡Se acabaron las fichas!</h1>
+        <h1 className="lobby__heading">
+          {endedByScorelessTurns
+            ? "¡Partida finalizada!"
+            : "¡Se acabaron las fichas!"}
+        </h1>
+        {endedByScorelessTurns && (
+          <p className="game-over__reason">
+            Se completaron dos rondas consecutivas sin confirmar palabras.
+          </p>
+        )}
         <p className="lobby__subtitle">
           {isTie
             ? "¡La partida terminó en empate!"
@@ -60,7 +77,15 @@ export default function GameOver() {
               <span>
                 {i + 1}. {player.name}
               </span>
-              <strong>{player.score} pts</strong>
+              <span className="game-over__score-detail">
+                <strong>{player.finalScore} pts</strong>
+                {player.rackPenalty > 0 && (
+                  <small>−{player.rackPenalty} por fichas</small>
+                )}
+                {player.rackBonus > 0 && (
+                  <small>+{player.rackBonus} por atril vacío</small>
+                )}
+              </span>
             </li>
           ))}
         </ol>

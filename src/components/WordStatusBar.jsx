@@ -1,5 +1,9 @@
+import { MIN_TILES_FIRST_TURN } from "../game/constants.js";
+
 export default function WordStatusBar({
   pendingWordPreview,
+  pendingTileCount,
+  isOpeningTurn,
   statusMessage,
   checking,
   onConfirm,
@@ -9,11 +13,21 @@ export default function WordStatusBar({
     pendingWordPreview && !pendingWordPreview.error,
   );
   const previewWords = pendingWordPreview?.words ?? [];
+  const minimumTiles = isOpeningTurn ? MIN_TILES_FIRST_TURN : 1;
+  const needsMoreTiles =
+    pendingTileCount > 0 && pendingTileCount < minimumTiles;
+  const canConfirm = hasPending && pendingTileCount >= minimumTiles;
 
   return (
     <div className="word-status-bar">
       <div className="word-status-bar__info">
-        {pendingWordPreview?.error ? (
+        {needsMoreTiles ? (
+          <span className="word-status-bar__hint word-status-bar__hint--error">
+            Coloca al menos {minimumTiles}{" "}
+            {minimumTiles === 1 ? "ficha nueva" : "fichas nuevas"} para
+            validar la jugada.
+          </span>
+        ) : pendingWordPreview?.error ? (
           <span className="word-status-bar__hint word-status-bar__hint--error">
             {pendingWordPreview.error}
           </span>
@@ -50,7 +64,7 @@ export default function WordStatusBar({
           type="button"
           className="btn btn--primary"
           onClick={onConfirm}
-          disabled={!hasPending || checking}
+          disabled={!canConfirm || checking}
         >
           {checking ? "Verificando…" : "Confirmar palabra"}
         </button>

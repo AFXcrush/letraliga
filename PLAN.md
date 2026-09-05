@@ -9,12 +9,14 @@ avanzar a la siguiente.
 - [x] Reparar la carga asíncrona del diccionario.
 - [x] Corregir la codificación y la normalización de `Ñ` y palabras con tilde.
 - [x] Añadir pruebas del diccionario con palabras válidas, inválidas y dígrafos.
-- [ ] Exigir que la primera palabra pase por la estrella central.
-- [ ] Exigir que las jugadas posteriores estén conectadas al tablero.
+- [x] Exigir al menos dos fichas nuevas sólo en la jugada inaugural; en las
+  jugadas posteriores permitir una ficha nueva conectada al tablero.
+- [x] Exigir que la primera palabra pase por la estrella central.
+- [x] Exigir que las jugadas posteriores estén conectadas al tablero.
 - [x] Detectar, validar y sumar todas las palabras cruzadas de una jugada.
 - [x] Aplicar los multiplicadores Wild sólo cuando una ficha nueva activa la casilla.
 - [x] Añadir pruebas de puntuación y cruces.
-- [ ] Añadir pruebas de huecos y conexión.
+- [x] Añadir pruebas de huecos y conexión.
 
 Resultado esperado: una partida local permite confirmar jugadas válidas y
 rechaza jugadas ilegales con mensajes comprensibles.
@@ -26,10 +28,10 @@ rechaza jugadas ilegales con mensajes comprensibles.
 - [x] Mostrar los significados de todas las palabras confirmadas.
 - [x] Permitir elegir y reiniciar la letra representada por un comodín.
 - [x] Dar un último turno al jugador que vacía la bolsa al reponer su atril.
-- [ ] Restar o transferir los puntos de las fichas restantes al finalizar.
+- [x] Restar o transferir los puntos de las fichas restantes al finalizar.
 - [x] Aplicar una bonificación de 25 puntos por usar las siete fichas.
-- [ ] Añadir intercambio de fichas con la bolsa.
-- [ ] Definir qué ocurre después de varios turnos pasados consecutivos.
+- [x] Añadir intercambio de fichas con la bolsa consumiendo el turno.
+- [x] Terminar tras dos rondas completas consecutivas sin palabras.
 
 Resultado esperado: se puede jugar una partida completa sin situaciones sin
 salida ni cálculos ambiguos.
@@ -38,29 +40,29 @@ salida ni cálculos ambiguos.
 
 - [x] Implementar selección por clic: elegir ficha y luego casilla.
 - [x] Evitar la selección accidental de texto dentro del tablero.
-- [ ] Añadir controles táctiles para móviles y tabletas.
-- [ ] Permitir operar tablero y atril con teclado.
-- [ ] Mostrar claramente la ficha seleccionada y las casillas disponibles.
-- [ ] Revisar el diseño en pantallas pequeñas.
+- [x] Añadir paneo y zoom táctiles para móviles y tabletas.
+- [x] Permitir operar tablero y atril con teclado.
+- [x] Mostrar claramente la ficha seleccionada y las casillas disponibles.
+- [x] Revisar el diseño en pantallas pequeñas.
 
 Resultado esperado: el juego se puede usar con ratón, tacto o teclado.
 
 ## 4. Guardado y calidad
 
-- [ ] Guardar la partida local para sobrevivir a una recarga de página.
-- [ ] Añadir una acción para abandonar o reiniciar una partida.
+- [x] Guardar la partida local para sobrevivir a una recarga de página.
+- [x] Añadir acciones para abandonar o reiniciar una partida.
 - [x] Configurar pruebas unitarias y de interacción automatizadas.
-- [ ] Reducir el peso del diccionario cargándolo de forma diferida o compacta.
-- [ ] Actualizar el README para reflejar el comportamiento real.
-- [ ] Inicializar Git y crear el primer punto de recuperación estable.
+- [x] Cargar el diccionario de forma diferida para no bloquear el inicio.
+- [x] Actualizar el README para reflejar el comportamiento real.
+- [x] Inicializar Git y crear el primer punto de recuperación estable.
 
 Resultado esperado: el proyecto es fácil de mantener y una sesión no se pierde
 por accidente.
 
 ## 5. Multijugador online
 
-- [ ] Definir creación y unión a salas mediante código o enlace.
-- [ ] Diseñar las tablas y políticas de seguridad de Supabase.
+- [x] Definir creación y unión a salas mediante código de seis caracteres.
+- [x] Diseñar las tablas, funciones y políticas de seguridad de Supabase.
 - [ ] Mover el estado autoritativo de la partida al backend.
 - [ ] Sincronizar tablero, jugadores, bolsa y turnos en tiempo real.
 - [ ] Ocultar el atril de cada jugador a los demás participantes.
@@ -72,9 +74,8 @@ sin poder alterar datos que no les corresponden.
 
 ## Orden recomendado inmediato
 
-1. Diccionario y normalización.
-2. Motor completo de reglas con pruebas.
-3. Comodines y final de partida.
-4. Clic, tacto y accesibilidad.
-5. Persistencia local.
-6. Multijugador online.
+1. Conectar un proyecto Supabase y ejecutar `supabase/schema.sql`.
+2. Mover la resolución autoritativa de turnos al backend.
+3. Sincronizar el estado público y entregar sólo el atril del usuario actual.
+4. Gestionar presencia, reconexiones y abandono de jugadores.
+5. Verificar una partida completa en dos o más navegadores.

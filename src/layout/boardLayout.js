@@ -52,7 +52,7 @@ export const BOARD_LAYOUT = [
   ],
   [
     "plain", "plain", "plain", "2W", "plain", "plain", "plain", "2W", "plain",
-    "plain", "plain", "2W", "plain", "star", "plain", "2W", "plain", "plain",
+    "plain", "plain", "2L", "plain", "star", "plain", "2L", "plain", "plain",
     "plain", "2W", "plain", "plain", "plain", "2W", "plain", "plain", "plain",
   ],
   [

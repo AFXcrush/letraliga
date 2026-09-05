@@ -15,6 +15,25 @@ function cellTypeFor(key, boardLayout) {
   return boardLayout[row]?.[col] ?? "plain";
 }
 
+function findCenterKey(boardLayout) {
+  for (let row = 0; row < boardLayout.length; row += 1) {
+    const col = boardLayout[row].indexOf("star");
+    if (col !== -1) return keyFor(row, col);
+  }
+  return null;
+}
+
+function touchesConfirmedTile(pendingCells, confirmedKeySet) {
+  return pendingCells.some(({ row, col }) =>
+    [
+      keyFor(row - 1, col),
+      keyFor(row + 1, col),
+      keyFor(row, col - 1),
+      keyFor(row, col + 1),
+    ].some((key) => confirmedKeySet.has(key)),
+  );
+}
+
 function collectWord(board, row, col, { dr, dc }) {
   let startRow = row;
   let startCol = col;
@@ -54,6 +73,9 @@ export function resolvePendingWord({ placedTiles, pendingKeys, boardLayout }) {
   if (pendingKeys.length === 0) return null;
 
   const pendingKeySet = new Set(pendingKeys);
+  const confirmedKeySet = new Set(
+    Object.keys(placedTiles).filter((key) => !pendingKeySet.has(key)),
+  );
   const pendingCells = pendingKeys.map((key) => {
     const [row, col] = key.split("-").map(Number);
     return { row, col, key };
@@ -67,6 +89,21 @@ export function resolvePendingWord({ placedTiles, pendingKeys, boardLayout }) {
 
   if (!sameRow && !sameCol) {
     return { error: "Las fichas deben ir en una sola fila o columna." };
+  }
+
+
+  // Los layouts de pruebas de puntuación pueden no incluir estrella; las
+  // reglas de apertura/conexión se activan en el tablero real al encontrarla.
+  const centerKey = findCenterKey(boardLayout);
+  if (centerKey && confirmedKeySet.size === 0 && !pendingKeySet.has(centerKey)) {
+    return { error: "La primera palabra debe cubrir la estrella central." };
+  }
+  if (
+    centerKey &&
+    confirmedKeySet.size > 0 &&
+    !touchesConfirmedTile(pendingCells, confirmedKeySet)
+  ) {
+    return { error: "La jugada debe conectarse con una palabra del tablero." };
   }
 
   let mainDirection = sameRow ? HORIZONTAL : VERTICAL;

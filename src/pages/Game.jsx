@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import Board from "../components/Board.jsx";
 import BagContentsModal from "../components/BagContentsModal.jsx";
 import WordMeaningsModal from "../components/WordMeaningsModal.jsx";
+import GameOptionsModal from "../components/GameOptionsModal.jsx";
 import PanZoom from "../components/PanZoom.jsx";
 import Rack from "../components/Rack.jsx";
 import PlayerList from "../components/PlayerList.jsx";
@@ -13,6 +14,7 @@ import { useGame } from "../context/GameContext.jsx";
 export default function Game() {
   const [isBagOpen, setIsBagOpen] = useState(false);
   const [isMeaningsOpen, setIsMeaningsOpen] = useState(false);
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const [selectedTileId, setSelectedTileId] = useState(null);
   const {
     players,
@@ -22,6 +24,7 @@ export default function Game() {
     bag,
     placedTiles,
     pendingTiles,
+    isOpeningTurn,
     pendingWordPreview,
     statusMessage,
     celebration,
@@ -34,10 +37,13 @@ export default function Game() {
     recallPendingTiles,
     shuffleRack,
     assignBlank,
+    exchangeTiles,
     confirmWord,
     passTurn,
     toggleDarkMode,
     dismissCelebration,
+    startGame,
+    resetToLobby,
   } = useGame();
 
   const selectedTile = useMemo(
@@ -75,6 +81,12 @@ export default function Game() {
         open={isMeaningsOpen}
         onClose={() => setIsMeaningsOpen(false)}
       />
+      <GameOptionsModal
+        open={isOptionsOpen}
+        onClose={() => setIsOptionsOpen(false)}
+        onRestart={() => startGame(players.map(({ name }) => name))}
+        onAbandon={resetToLobby}
+      />
       <div className="app__top-bar">
         <div className="score-counter">
           <div className="score-counter__header">
@@ -104,7 +116,16 @@ export default function Game() {
             <span aria-hidden="true">📖</span> Significados
           </button>
         </div>
-        <ThemeToggle darkMode={darkMode} onToggle={toggleDarkMode} />
+        <div className="game-toolbar">
+          <button
+            type="button"
+            className="game-toolbar__options"
+            onClick={() => setIsOptionsOpen(true)}
+          >
+            ⚙ Opciones
+          </button>
+          <ThemeToggle darkMode={darkMode} onToggle={toggleDarkMode} />
+        </div>
       </div>
 
       <PlayerList players={players} currentPlayerIndex={currentPlayerIndex} />
@@ -130,6 +151,8 @@ export default function Game() {
 
       <WordStatusBar
         pendingWordPreview={pendingWordPreview}
+        pendingTileCount={Object.keys(pendingTiles).length}
+        isOpeningTurn={isOpeningTurn}
         statusMessage={statusMessage}
         checking={checking}
         onConfirm={confirmWord}
@@ -142,10 +165,12 @@ export default function Game() {
         onRecall={recallPendingTiles}
         onShuffle={shuffleRack}
         onAssignBlank={assignBlank}
+        onExchange={exchangeTiles}
         onSelectTile={selectRackTile}
         selectedTileId={selectedTileId}
         canRecall={Object.keys(pendingTiles).length > 0}
         disabled={checking}
+        bagCount={tilesRemaining}
       />
     </div>
   );

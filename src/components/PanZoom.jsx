@@ -22,6 +22,7 @@ export default function PanZoom({ children, initialScale = 1 }) {
     origX: 0,
     origY: 0,
   });
+  const touchState = useRef(null);
 
   // Evita que el tablero se pueda arrastrar/zoomear fuera de la pantalla:
   // siempre deja al menos `margin` px de contenido visible en cada eje.
@@ -117,6 +118,81 @@ export default function PanZoom({ children, initialScale = 1 }) {
     dragState.current.dragging = false;
   }, []);
 
+  const handleTouchStart = useCallback(
+    (event) => {
+      const touches = Array.from(event.touches);
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      if (touches.length === 2) {
+        const [first, second] = touches;
+        touchState.current = {
+          mode: "pinch",
+          distance: Math.hypot(
+            second.clientX - first.clientX,
+            second.clientY - first.clientY,
+          ),
+          midpointX: (first.clientX + second.clientX) / 2 - rect.left,
+          midpointY: (first.clientY + second.clientY) / 2 - rect.top,
+          originalX: transform.x,
+          originalY: transform.y,
+          originalScale: transform.scale,
+        };
+      } else if (touches.length === 1) {
+        const [touch] = touches;
+        touchState.current = {
+          mode: "pan",
+          startX: touch.clientX,
+          startY: touch.clientY,
+          originalX: transform.x,
+          originalY: transform.y,
+        };
+      }
+    },
+    [transform],
+  );
+
+  const handleTouchMove = useCallback(
+    (event) => {
+      const gesture = touchState.current;
+      if (!gesture) return;
+      event.preventDefault();
+      const touches = Array.from(event.touches);
+
+      if (gesture.mode === "pan" && touches.length === 1) {
+        const [touch] = touches;
+        setTransform((current) => ({
+          ...current,
+          ...clamp(
+            gesture.originalX + touch.clientX - gesture.startX,
+            gesture.originalY + touch.clientY - gesture.startY,
+          ),
+        }));
+      } else if (gesture.mode === "pinch" && touches.length === 2) {
+        const [first, second] = touches;
+        const distance = Math.hypot(
+          second.clientX - first.clientX,
+          second.clientY - first.clientY,
+        );
+        const nextScale = Math.min(
+          MAX_SCALE,
+          Math.max(MIN_SCALE, gesture.originalScale * (distance / gesture.distance)),
+        );
+        const ratio = nextScale / gesture.originalScale;
+        const nextX =
+          gesture.midpointX - (gesture.midpointX - gesture.originalX) * ratio;
+        const nextY =
+          gesture.midpointY - (gesture.midpointY - gesture.originalY) * ratio;
+        setTransform({ ...clamp(nextX, nextY), scale: nextScale });
+      }
+    },
+    [clamp],
+  );
+
+  const stopTouchGesture = useCallback(() => {
+    touchState.current = null;
+  }, []);
+
   // Red de seguridad: si un drag nativo (mover una ficha) termina fuera del
   // contenedor, esto garantiza que el estado de paneo quede limpio.
   useEffect(() => {
@@ -136,6 +212,10 @@ export default function PanZoom({ children, initialScale = 1 }) {
       onMouseMove={handleMouseMove}
       onMouseUp={stopDragging}
       onMouseLeave={stopDragging}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={stopTouchGesture}
+      onTouchCancel={stopTouchGesture}
     >
       <div
         ref={contentRef}

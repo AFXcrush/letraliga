@@ -1,20 +1,36 @@
 import { useState } from "react";
 import { GAME_PHASES } from "../game/constants.js";
+import { loadGameSnapshot } from "../services/gameStorage.js";
 
 /** Estado mutable central. Las reglas viven en hooks especializados. */
 export function useGameState() {
-  const [phase, setPhase] = useState(GAME_PHASES.LOBBY);
-  const [players, setPlayers] = useState([]);
-  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
-  const [bag, setBag] = useState([]);
-  const [placedTiles, setPlacedTiles] = useState({});
-  const [pendingTiles, setPendingTiles] = useState({});
-  const [statusMessage, setStatusMessage] = useState(null);
+  const [savedGame] = useState(loadGameSnapshot);
+  const [phase, setPhase] = useState(savedGame?.phase ?? GAME_PHASES.LOBBY);
+  const [players, setPlayers] = useState(savedGame?.players ?? []);
+  const [currentPlayerIndex, setCurrentPlayerIndex] = useState(
+    savedGame?.currentPlayerIndex ?? 0,
+  );
+  const [bag, setBag] = useState(savedGame?.bag ?? []);
+  const [placedTiles, setPlacedTiles] = useState(savedGame?.placedTiles ?? {});
+  const [pendingTiles, setPendingTiles] = useState(
+    savedGame?.pendingTiles ?? {},
+  );
+  const [statusMessage, setStatusMessage] = useState(
+    savedGame?.statusMessage ?? null,
+  );
   const [celebration, setCelebration] = useState(null);
   const [checking, setChecking] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
-  const [playedWords, setPlayedWords] = useState([]);
-  const [isFinalTurn, setIsFinalTurn] = useState(false);
+  const [darkMode, setDarkMode] = useState(savedGame?.darkMode ?? false);
+  const [playedWords, setPlayedWords] = useState(savedGame?.playedWords ?? []);
+  const [isFinalTurn, setIsFinalTurn] = useState(
+    savedGame?.isFinalTurn ?? false,
+  );
+  const [scorelessTurnCount, setScorelessTurnCount] = useState(
+    savedGame?.scorelessTurnCount ?? 0,
+  );
+  const [gameEndReason, setGameEndReason] = useState(
+    savedGame?.gameEndReason ?? null,
+  );
 
   return {
     phase,
@@ -41,5 +57,9 @@ export function useGameState() {
     setPlayedWords,
     isFinalTurn,
     setIsFinalTurn,
+    scorelessTurnCount,
+    setScorelessTurnCount,
+    gameEndReason,
+    setGameEndReason,
   };
 }

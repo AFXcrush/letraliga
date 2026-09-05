@@ -26,13 +26,16 @@ src/
 
   game/
     constants.js         Reglas y fases compartidas
+    finalScoring.js      Penalizaciones y transferencias del cierre
     gameSetup.js         Preparación independiente de jugadores y bolsa
+    tileExchange.js      Cambio seguro de fichas con la bolsa
     turnResult.js        Historial, mensajes y celebración de una jugada
 
   hooks/
     useGameState.js      Estado mutable centralizado
     useGameController.js Compone la API que consume la interfaz
     useBoardState.js     Valores derivados del tablero y vista previa
+    useGamePersistence.js Guardado automático de la partida local
     useTileActions.js    Colocar, devolver, mezclar y asignar comodines
     useTurnActions.js    Validar, puntuar, confirmar y pasar turnos
 
@@ -49,13 +52,16 @@ src/
     ThemeToggle.jsx          Botón de luna/sol para el tema oscuro
     WordStatusBar.jsx        Vista previa de las palabras armadas + validación
     BagContentsModal.jsx     Inventario de letras restantes en la bolsa
+    ExchangeTilesModal.jsx   Selección y confirmación del cambio de fichas
+    GameOptionsModal.jsx     Reiniciar o abandonar la partida
     WordMeaningsModal.jsx    Significados de las palabras confirmadas
 
   services/
     dictionary.js          Valida palabras con un diccionario español local
                             y funciona sin conexión ni claves externas
     supabaseClient.js       Cliente opcional de Supabase
-    gameService.js           Capa de "partida": local hoy, lista para Supabase
+    gameStorage.js           Persistencia automática de la partida local
+    onlineGameService.js     Autenticación, salas y suscripciones de Supabase
 
   layout/
     boardLayout.js          Grid de 19x27 con las casillas especiales
@@ -73,11 +79,19 @@ src/
   puntuación quedan guardadas en las fichas para palabras futuras.
 - Las casillas 2L/3L mejoran la ficha nueva colocada sobre ellas. Las casillas
   2W/3W mejoran todas las fichas de la palabra confirmada.
+- Las dos casillas especiales más cercanas a los lados de la estrella son 2L,
+  para evitar que la jugada inaugural active dos multiplicadores de palabra.
 - Una casilla multiplicadora sólo se activa cuando recibe una ficha nueva; no
   vuelve a aplicarse por tener encima una ficha confirmada.
 - Antes de aplicar la palabra se valida contra un diccionario real en
   español. Si no existe, no se aplica y el turno sigue en el mismo jugador
   para que pueda corregir la jugada.
+- La jugada inaugural debe colocar como mínimo dos fichas nuevas. Desde la
+  siguiente jugada basta una ficha nueva si forma una palabra válida y queda
+  conectada al tablero.
+- La primera palabra debe cubrir la estrella central. Las siguientes jugadas
+  deben conectarse ortogonalmente con al menos una ficha ya confirmada y no
+  pueden contener huecos internos.
 - Al confirmar una palabra válida, el atril se rellena automáticamente con
   fichas nuevas de la bolsa. Al comenzar hay al menos dos vocales y dos
   consonantes; en las reposiciones hay al menos dos vocales y una consonante,
@@ -97,31 +111,52 @@ src/
   larga y la palabra individual que consiguió mayor puntaje.
 - Cuando una reposición deja la bolsa vacía, el mismo jugador recibe un último
   turno para utilizar las fichas que acaba de robar; después termina la partida.
+- El jugador puede cambiar una o más fichas si la bolsa tiene suficientes para
+  reemplazarlas. Las fichas devueltas no pueden salir inmediatamente y el cambio
+  consume el turno. Antes de ejecutarlo se muestra una segunda confirmación para
+  evitar cambios accidentales.
+- Pasar o cambiar fichas cuenta como turno sin palabra. La partida termina tras
+  dos rondas completas consecutivas sin palabras; una palabra válida reinicia
+  el contador.
+- Al finalizar, cada jugador pierde los puntos de las fichas que conserva. Si
+  alguien vació su atril, recibe la suma de las penalizaciones de sus rivales.
 - Las fichas pueden colocarse arrastrándolas o pulsando primero la ficha y luego
   la casilla. La segunda opción también funciona en pantallas táctiles.
+- En móviles, el tablero admite paneo con un dedo y zoom con dos dedos. Con
+  teclado se seleccionan fichas con Enter/Espacio y se recorren las casillas
+  usando las flechas. En pantallas de más de 1200 px, el área visible del tablero
+  se amplía hasta un ancho máximo de 1200 px.
 - Una confirmación válida muestra una celebración breve y anima las fichas de
   la palabra sin bloquear el siguiente turno.
 - De 1 a 4 jugadores, por turnos, con marcador visible para todos.
-- La partida termina cuando la bolsa de letras se queda sin fichas.
 
 ## Modo online con Supabase (opcional)
 
 Por defecto el juego funciona 100% local ("pasar y jugar" en un mismo
 dispositivo), sin necesitar backend.
 
+La partida se guarda automáticamente en el almacenamiento local del navegador,
+incluyendo el tablero y una jugada aún no confirmada, y se recupera después de
+recargar la página.
+
+El menú de opciones permite reiniciar con los mismos jugadores o abandonar la
+partida y volver al lobby.
+
 Para habilitar el modo online:
 
 1. Creá un proyecto gratis en [supabase.com](https://supabase.com).
 2. Copiá `.env.example` a `.env` y completá `VITE_SUPABASE_URL` y
    `VITE_SUPABASE_ANON_KEY` (los encontrás en Project Settings → API).
-3. Creá las tablas sugeridas en el comentario de `src/services/gameService.js`
-   (`games`, `players`, `moves`).
-4. Activá Realtime en las tablas `games` y `players`.
+3. Ejecutá `supabase/schema.sql` en el SQL Editor.
+4. Habilitá Anonymous Sign-Ins en Authentication. El script registra en
+   Realtime las tablas públicas necesarias.
 
-Toda la lógica de "cómo se guarda y sincroniza una partida" vive en
-`src/services/gameService.js` y `src/services/supabaseClient.js`: son los
-únicos archivos que hace falta tocar para pasar de local a online, ya que
-`GameContext.jsx` no depende de si el backend existe o no.
+El esquema separa la bolsa y los atriles privados de los datos públicos y usa
+políticas RLS. El cliente de `onlineGameService.js` ya define autenticación
+anónima, creación/unión por código, lectura segura y suscripción a la sala.
+
+La conexión vive en `src/services/supabaseClient.js` y el contrato de salas en
+`src/services/onlineGameService.js`. El modo local sigue siendo independiente.
 
 ## Diccionario de validación
 
