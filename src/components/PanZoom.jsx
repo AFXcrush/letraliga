@@ -24,6 +24,22 @@ export default function PanZoom({ children, initialScale = 1 }) {
   });
   const touchState = useRef(null);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    const content = contentRef.current;
+    if (!container || !content) return undefined;
+
+    const frame = window.requestAnimationFrame(() => {
+      const containerRect = container.getBoundingClientRect();
+      setTransform((current) => ({
+        ...current,
+        x: (containerRect.width - content.offsetWidth) / 2,
+        y: (containerRect.height - content.offsetHeight) / 2,
+      }));
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
   // Evita que el tablero se pueda arrastrar/zoomear fuera de la pantalla:
   // siempre deja al menos `margin` px de contenido visible en cada eje.
   const clamp = useCallback((x, y) => {

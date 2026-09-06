@@ -3,6 +3,7 @@ import { MIN_TILES_FIRST_TURN } from "../game/constants.js";
 export default function WordStatusBar({
   pendingWordPreview,
   pendingTileCount,
+  previewValidation,
   isOpeningTurn,
   statusMessage,
   checking,
@@ -17,7 +18,13 @@ export default function WordStatusBar({
   const minimumTiles = isOpeningTurn ? MIN_TILES_FIRST_TURN : 1;
   const needsMoreTiles =
     pendingTileCount > 0 && pendingTileCount < minimumTiles;
-  const canConfirm = hasPending && pendingTileCount >= minimumTiles;
+  const canConfirm =
+    hasPending &&
+    pendingTileCount >= minimumTiles &&
+    previewValidation?.status === "valid";
+  const invalidWords = (previewValidation?.words ?? [])
+    .filter(({ valid }) => !valid)
+    .map(({ word }) => word.toUpperCase());
 
   return (
     <div className="word-status-bar">
@@ -41,6 +48,20 @@ export default function WordStatusBar({
                 .join(" + ") || pendingWordPreview.word.toUpperCase()}
             </strong>{" "}
             · Total: {pendingWordPreview.points} pts
+            <span
+              className={`word-status-bar__dictionary word-status-bar__dictionary--${previewValidation?.status ?? "idle"}`}
+              role="status"
+            >
+              {previewValidation?.status === "checking"
+                ? "Consultando diccionario…"
+                : previewValidation?.status === "valid"
+                  ? "✓ Existe en el diccionario"
+                  : previewValidation?.status === "invalid"
+                    ? `✕ ${invalidWords.join(" y ")} no ${invalidWords.length === 1 ? "existe" : "existen"}`
+                    : previewValidation?.status === "error"
+                      ? previewValidation.message
+                      : ""}
+            </span>
           </span>
         ) : (
           <span className="word-status-bar__hint">
@@ -67,7 +88,9 @@ export default function WordStatusBar({
           onClick={onConfirm}
           disabled={!canConfirm || checking || disabled}
         >
-          {checking ? "Verificando…" : "Confirmar palabra"}
+          {checking || previewValidation?.status === "checking"
+            ? "Verificando…"
+            : "Confirmar palabra"}
         </button>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { playWordConfirmedSound } from "../services/soundEffects.js";
 
 const CONFETTI_COLORS = ["coral", "gold", "green", "blue", "purple"];
 
@@ -6,6 +7,7 @@ export default function WordCelebration({ celebration, onDismiss }) {
   useEffect(() => {
     if (!celebration) return undefined;
 
+    playWordConfirmedSound();
     const timeout = window.setTimeout(onDismiss, 2400);
     return () => window.clearTimeout(timeout);
   }, [celebration, onDismiss]);

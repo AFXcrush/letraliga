@@ -65,6 +65,7 @@ export function useTurnActions({
   setBag,
   setPlacedTiles,
   setPendingTiles,
+  setLastMoveKeys,
   setStatusMessage,
   setCelebration,
   setChecking,
@@ -169,6 +170,7 @@ export function useTurnActions({
     });
 
     setPlacedTiles((tiles) => ({ ...tiles, ...resolved.upgradedTiles }));
+    setLastMoveKeys(resolved.cellsKeys);
     setPendingTiles({});
     setPlayedWords((words) => [
       ...words,
@@ -235,6 +237,7 @@ export function useTurnActions({
     setChecking,
     setFinalTurnPlayerId,
     setPendingTiles,
+    setLastMoveKeys,
     setPhase,
     setPlacedTiles,
     setPlayedWords,

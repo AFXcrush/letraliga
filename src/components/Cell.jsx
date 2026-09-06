@@ -29,6 +29,8 @@ export default function Cell({
   col,
   placedTile,
   isPending,
+  isOpponentPending,
+  isLastMove,
   isCelebrating,
   onDropTile,
   onSelectCell,
@@ -43,14 +45,14 @@ export default function Cell({
   const bonusClass = bonusTone ? ` cell--wild-${bonusTone}` : "";
 
   const handleDragOver = (e) => {
-    if (placedTile) return; // casilla ocupada, no acepta otra ficha
+    if (placedTile || isOpponentPending) return; // casilla ocupada, no acepta otra ficha
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
-    if (placedTile) return;
+    if (placedTile || isOpponentPending) return;
     const raw = e.dataTransfer.getData("application/json");
     if (!raw) return;
     const tile = JSON.parse(raw);
@@ -70,6 +72,8 @@ export default function Cell({
     <button
       className={`cell cell--${type}${placedTile ? " cell--occupied" : ""}${
         isPending ? " cell--pending" : ""
+      }${isOpponentPending ? " cell--opponent-pending" : ""}${
+        isLastMove ? " cell--last-move" : ""
       }${isCelebrating ? " cell--celebrating" : ""}${
         isClickTarget ? " cell--click-target" : ""
       }${bonusClass}`}
@@ -77,7 +81,7 @@ export default function Cell({
       onDragEnter={handleDragOver}
       onDrop={handleDrop}
       onClick={() => {
-        if (!placedTile) onSelectCell?.({ row, col });
+        if (!placedTile && !isOpponentPending) onSelectCell?.({ row, col });
       }}
       draggable={Boolean(placedTile) && isPending}
       onDragStart={handleDragStart}
@@ -87,7 +91,9 @@ export default function Cell({
       data-row={row}
       data-col={col}
     >
-      {placedTile ? (
+      {isOpponentPending ? (
+        <span className="cell__opponent-tile" aria-hidden="true" />
+      ) : placedTile ? (
         <span className="cell__placed">
           <span className="cell__placed-letter">
             {placedTile.letter || "·"}

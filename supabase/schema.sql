@@ -262,6 +262,58 @@ begin
 end;
 $$;
 
+-- Publica únicamente las coordenadas ocupadas durante el turno. Las letras,
+-- puntos e identificadores de las fichas permanecen privados en el navegador
+-- del jugador activo.
+create or replace function public.preview_game_turn(
+  target_game_id uuid,
+  preview_tile_keys jsonb
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  target_game public.games%rowtype;
+  acting_player public.game_players%rowtype;
+begin
+  if jsonb_typeof(preview_tile_keys) <> 'array'
+    or jsonb_array_length(preview_tile_keys) > 7
+    or exists (
+      select 1
+      from jsonb_array_elements_text(preview_tile_keys) as key(value)
+      where key.value !~ '^(?:[0-9]|1[0-8])-(?:[0-9]|1[0-9]|2[0-6])$'
+    ) then
+    raise exception 'Invalid preview tiles';
+  end if;
+
+  select * into target_game from public.games
+  where id = target_game_id for update;
+  select * into acting_player from public.game_players
+  where game_id = target_game_id and user_id = (select auth.uid());
+
+  if target_game.id is null or acting_player.id is null
+    or target_game.status <> 'playing'
+    or target_game.public_state->>'currentPlayerId' <> acting_player.id::text then
+    raise exception 'It is not your turn';
+  end if;
+
+  update public.games as g
+  set public_state = jsonb_set(
+        jsonb_set(g.public_state, '{pendingTileKeys}', preview_tile_keys, true),
+        '{lastMoveKeys}',
+        case
+          when jsonb_array_length(preview_tile_keys) > 0 then '[]'::jsonb
+          else coalesce(g.public_state->'lastMoveKeys', '[]'::jsonb)
+        end,
+        true
+      ),
+      updated_at = now()
+  where g.id = target_game_id;
+end;
+$$;
+
 create or replace function public.leave_game_room(target_game_id uuid)
 returns boolean
 language plpgsql
@@ -477,12 +529,14 @@ $$;
 revoke all on function public.create_game_room(text) from public;
 revoke all on function public.join_game_room(text, text) from public;
 revoke all on function public.get_game_room(uuid) from public;
+revoke all on function public.preview_game_turn(uuid, jsonb) from public;
 revoke all on function public.start_game_room(uuid, jsonb, jsonb, jsonb) from public;
 revoke all on function public.commit_game_turn(uuid, bigint, jsonb, jsonb, jsonb, integer, jsonb, integer, jsonb) from public;
 revoke all on function public.leave_game_room(uuid) from public;
 grant execute on function public.create_game_room(text) to authenticated;
 grant execute on function public.join_game_room(text, text) to authenticated;
 grant execute on function public.get_game_room(uuid) to authenticated;
+grant execute on function public.preview_game_turn(uuid, jsonb) to authenticated;
 grant execute on function public.start_game_room(uuid, jsonb, jsonb, jsonb) to authenticated;
 grant execute on function public.commit_game_turn(uuid, bigint, jsonb, jsonb, jsonb, integer, jsonb, integer, jsonb) to authenticated;
 grant execute on function public.leave_game_room(uuid) to authenticated;

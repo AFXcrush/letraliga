@@ -85,7 +85,8 @@ src/
   vuelve a aplicarse por tener encima una ficha confirmada.
 - Antes de aplicar la palabra se valida contra un diccionario real en
   español. Si no existe, no se aplica y el turno sigue en el mismo jugador
-  para que pueda corregir la jugada.
+  para que pueda corregir la jugada. El resultado de esa consulta se muestra
+  en vivo antes de habilitar el botón de confirmación.
 - La jugada inaugural debe colocar como mínimo dos fichas nuevas. Desde la
   siguiente jugada basta una ficha nueva si forma una palabra válida y queda
   conectada al tablero.
@@ -103,7 +104,8 @@ src/
   aparecen atenuadas en gris.
 - El botón de significados bajo la bolsa lista todas las palabras confirmadas,
   su autor, su puntaje y hasta tres acepciones consultadas en Wikcionario. Esta
-  consulta sí necesita conexión, pero nunca bloquea la partida.
+  consulta sí necesita conexión, pero nunca bloquea la partida; la jugada más
+  reciente aparece primero.
 - Al presionar un comodín se abre el abecedario para elegir la letra que
   representa. Sigue valiendo cero puntos y se reinicia si vuelve al atril.
 - Usar las siete fichas del atril en una jugada concede un bono de 25 puntos.
@@ -125,11 +127,13 @@ src/
   la casilla. La segunda opción también funciona en pantallas táctiles.
 - En móviles, el tablero admite paneo con un dedo y zoom con dos dedos. Con
   teclado se seleccionan fichas con Enter/Espacio y se recorren las casillas
-  usando las flechas. En pantallas de más de 1200 px, el área visible del tablero
-  se amplía hasta un ancho máximo de 1200 px.
+  usando las flechas. Durante la partida el tablero ocupa toda la pantalla y
+  los controles flotan encima con fondos translúcidos y sombra.
 - Una confirmación válida muestra una celebración breve y anima las fichas de
   la palabra sin bloquear el siguiente turno. En el modo online aparece para
-  todos los participantes e indica quién jugó y cuántos puntos obtuvo.
+  todos los participantes, reproduce un aviso sonoro e indica quién jugó y
+  cuántos puntos obtuvo. La última jugada permanece resaltada hasta que el
+  siguiente jugador coloca su primera ficha.
 - De 1 a 4 jugadores, por turnos, con marcador visible para todos.
 
 ## Modo online con Supabase (opcional)
@@ -160,6 +164,10 @@ políticas RLS. El cliente utiliza autenticación anónima y permite crear o uni
 a una sala mediante un código de seis caracteres. El anfitrión inicia cuando hay
 al menos dos jugadores y los cambios de tablero, marcador y turno se propagan
 mediante Realtime.
+
+Mientras el jugador activo prepara su jugada, los demás ven únicamente fichas
+blancas en las coordenadas ocupadas. Las letras, sus puntos y sus identificadores
+no se publican en el estado compartido.
 
 Cada participante recibe únicamente su propio atril. El orden de la bolsa se
 mantiene privado y el estado público conserva sólo las cantidades por letra. Al

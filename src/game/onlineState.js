@@ -14,6 +14,8 @@ export function createOnlinePublicState(state) {
     currentPlayerIndex: state.currentPlayerIndex,
     currentPlayerId: state.players[state.currentPlayerIndex]?.id ?? null,
     placedTiles: state.placedTiles,
+    pendingTileKeys: [],
+    lastMoveKeys: state.lastMoveKeys ?? [],
     playedWords: state.playedWords,
     finalTurnPlayerId: state.finalTurnPlayerId,
     scorelessTurnCount: state.scorelessTurnCount,
@@ -50,6 +52,8 @@ export function hydrateOnlineRoom(room, playerId) {
     currentPlayerIndex: publicState.currentPlayerIndex ?? 0,
     bag: room?.bag ?? [],
     placedTiles: publicState.placedTiles ?? {},
+    pendingTileKeys: publicState.pendingTileKeys ?? [],
+    lastMoveKeys: publicState.lastMoveKeys ?? [],
     playedWords: publicState.playedWords ?? [],
     finalTurnPlayerId:
       publicState.finalTurnPlayerId ??

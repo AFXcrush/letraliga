@@ -141,9 +141,52 @@ describe("interacción entre el atril y el tablero", () => {
     );
 
     expect(
+      await screen.findByText(
+        "✓ Existe en el diccionario",
+        {},
+        { timeout: 5000 },
+      ),
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole("button", { name: "Confirmar palabra" }),
     ).toBeEnabled();
     expect(screen.getByText("UN (2)")).toBeInTheDocument();
+  });
+
+  test("retira el resaltado anterior al colocar la primera ficha nueva", async () => {
+    saveGameSnapshot({
+      phase: "playing",
+      players: [
+        {
+          id: "player-1",
+          name: "Prueba",
+          score: 0,
+          rack: [{ id: "tile-n", letter: "N", points: 1 }],
+        },
+      ],
+      currentPlayerIndex: 0,
+      bag: [],
+      placedTiles: {
+        "9-13": { id: "tile-u", letter: "U", points: 1 },
+      },
+      pendingTiles: {},
+      lastMoveKeys: ["9-13"],
+      playedWords: [],
+      scorelessTurnCount: 0,
+      darkMode: false,
+    });
+    const user = userEvent.setup();
+    render(<App />);
+    const previousCell = screen.getByRole("button", {
+      name: "Casilla fila 9, columna 13, centro",
+    });
+    expect(previousCell).toHaveClass("cell--last-move");
+
+    await user.click(screen.getByRole("button", { name: "Ficha N, 1 puntos" }));
+    await user.click(
+      screen.getByRole("button", { name: "Casilla fila 9, columna 14" }),
+    );
+    expect(previousCell).not.toHaveClass("cell--last-move");
   });
 
   test("termina después de dos rondas sin palabras", async () => {

@@ -13,6 +13,7 @@ import {
   getOnlineRoom,
   joinOnlineRoom,
   leaveOnlineRoom,
+  previewOnlineTurn,
   startOnlineGame,
   subscribeToOnlineRoom,
 } from "../services/onlineGameService.js";
@@ -42,6 +43,7 @@ function onlineErrorMessage(error) {
 export function useGameController() {
   const state = useGameState();
   const [onlineSyncRequest, setOnlineSyncRequest] = useState(null);
+  const [remotePendingKeys, setRemotePendingKeys] = useState([]);
   const lastSeenCelebrationId = useRef(null);
   useGamePersistence(state);
 
@@ -73,6 +75,7 @@ export function useGameController() {
     pendingTiles: state.pendingTiles,
     currentPlayerIndex: state.currentPlayerIndex,
     setPendingTiles: state.setPendingTiles,
+    setLastMoveKeys: state.setLastMoveKeys,
     setPlayers: state.setPlayers,
     setStatusMessage: state.setStatusMessage,
   });
@@ -92,6 +95,7 @@ export function useGameController() {
     setBag: state.setBag,
     setPlacedTiles: state.setPlacedTiles,
     setPendingTiles: state.setPendingTiles,
+    setLastMoveKeys: state.setLastMoveKeys,
     setStatusMessage: state.setStatusMessage,
     setCelebration: state.setCelebration,
     setChecking: state.setChecking,
@@ -111,11 +115,27 @@ export function useGameController() {
       const hydrated = hydrateOnlineRoom(room, playerId);
       const userId = sessionDetails.userId ?? state.onlineSession?.userId;
 
-      state.setPlayers(hydrated.players);
+      state.setPlayers((currentPlayers) => {
+        const preserveRack =
+          sessionDetails.preservePending &&
+          hydrated.players[hydrated.currentPlayerIndex]?.id === playerId;
+        if (!preserveRack) return hydrated.players;
+        const localRack =
+          currentPlayers.find(({ id }) => id === playerId)?.rack ?? [];
+        return hydrated.players.map((player) =>
+          player.id === playerId ? { ...player, rack: localRack } : player,
+        );
+      });
       state.setCurrentPlayerIndex(hydrated.currentPlayerIndex);
       state.setBag(hydrated.bag);
       state.setPlacedTiles(hydrated.placedTiles);
-      state.setPendingTiles({});
+      if (!sessionDetails.preservePending) state.setPendingTiles({});
+      setRemotePendingKeys(
+        hydrated.players[hydrated.currentPlayerIndex]?.id === playerId
+          ? []
+          : hydrated.pendingTileKeys,
+      );
+      state.setLastMoveKeys(hydrated.lastMoveKeys);
       state.setPlayedWords(hydrated.playedWords);
       state.setFinalTurnPlayerId(hydrated.finalTurnPlayerId);
       state.setScorelessTurnCount(hydrated.scorelessTurnCount);
@@ -151,6 +171,7 @@ export function useGameController() {
       state.setGameEndReason,
       state.setFinalTurnPlayerId,
       state.setOnlineSession,
+      state.setLastMoveKeys,
       state.setPendingTiles,
       state.setPhase,
       state.setPlacedTiles,
@@ -176,7 +197,7 @@ export function useGameController() {
     const refresh = async () => {
       try {
         const room = await getOnlineRoom(session.gameId);
-        if (active) hydrateRoom(room);
+        if (active) hydrateRoom(room, { preservePending: true });
       } catch (error) {
         if (active) {
           state.setStatusMessage({ type: "error", text: onlineErrorMessage(error) });
@@ -191,6 +212,24 @@ export function useGameController() {
       unsubscribe();
     };
   }, [hydrateRoom, state.onlineSession?.gameId, state.setStatusMessage]);
+
+  useEffect(() => {
+    const gameId = state.onlineSession?.gameId;
+    if (!gameId || !canTakeTurn || onlineSyncRequest) return undefined;
+    const tileKeys = Object.keys(state.pendingTiles);
+    const timeout = window.setTimeout(() => {
+      previewOnlineTurn(gameId, tileKeys).catch(() => {
+        // Esta señal sólo alimenta la vista anónima de los rivales. El commit
+        // del turno sigue siendo la fuente de verdad para el estado del juego.
+      });
+    }, 120);
+    return () => window.clearTimeout(timeout);
+  }, [
+    canTakeTurn,
+    onlineSyncRequest,
+    state.onlineSession?.gameId,
+    state.pendingTiles,
+  ]);
 
   useEffect(() => {
     if (!onlineSyncRequest || !state.onlineSession?.gameId) return undefined;
@@ -299,6 +338,7 @@ export function useGameController() {
         currentPlayerIndex: 0,
         bag: initial.bag,
         placedTiles: {},
+        lastMoveKeys: [],
         playedWords: [],
         finalTurnPlayerId: null,
         scorelessTurnCount: 0,
@@ -330,6 +370,8 @@ export function useGameController() {
       state.setBag(game.bag);
       state.setPlacedTiles({});
       state.setPendingTiles({});
+      state.setLastMoveKeys([]);
+      setRemotePendingKeys([]);
       state.setCurrentPlayerIndex(0);
       state.setStatusMessage(null);
       state.setCelebration(null);
@@ -351,6 +393,8 @@ export function useGameController() {
     state.setBag([]);
     state.setPlacedTiles({});
     state.setPendingTiles({});
+    state.setLastMoveKeys([]);
+    setRemotePendingKeys([]);
     state.setStatusMessage(null);
     state.setCelebration(null);
     lastSeenCelebrationId.current = null;
@@ -395,6 +439,8 @@ export function useGameController() {
     bagCounts: isOnlineGame ? state.onlineSession?.bagCounts : null,
     placedTiles: state.placedTiles,
     pendingTiles: state.pendingTiles,
+    remotePendingKeys,
+    lastMoveKeys: state.lastMoveKeys,
     isOpeningTurn,
     pendingWordPreview: boardState.pendingWordPreview,
     statusMessage: getVisibleStatusMessage(

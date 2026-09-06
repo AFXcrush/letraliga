@@ -26,7 +26,7 @@ export default function WordMeaningsModal({
     setEntries([]);
 
     Promise.all(
-      playedWords.map(async (play) => {
+      [...playedWords].reverse().map(async (play) => {
         try {
           return { ...play, meaning: await loadMeaning(play.word) };
         } catch {

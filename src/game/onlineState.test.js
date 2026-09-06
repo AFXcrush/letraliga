@@ -15,6 +15,7 @@ test("el estado público online no expone atriles ni el orden de la bolsa", () =
     currentPlayerIndex: 1,
     bag: [{ letter: "A" }, { letter: "A" }, { letter: "B" }],
     placedTiles: {},
+    lastMoveKeys: ["9-13", "9-14"],
     playedWords: [],
     finalTurnPlayerId: null,
     celebration: {
@@ -32,6 +33,8 @@ test("el estado público online no expone atriles ni el orden de la bolsa", () =
   assert.equal(state.bagCount, 3);
   assert.deepEqual(state.bagCounts, { A: 2, B: 1 });
   assert.equal(state.celebration.playerName, "Luis");
+  assert.deepEqual(state.pendingTileKeys, []);
+  assert.deepEqual(state.lastMoveKeys, ["9-13", "9-14"]);
   assert.equal("players" in state, false);
   assert.equal("bag" in state, false);
 });
@@ -76,6 +79,8 @@ test("hidrata únicamente el atril del jugador conectado", () => {
           phase: "playing",
           currentPlayerIndex: 1,
           bagCount: 8,
+          pendingTileKeys: ["9-14"],
+          lastMoveKeys: ["9-13"],
           celebration: {
             id: "move-2",
             playerName: "Ana",
@@ -98,6 +103,8 @@ test("hidrata únicamente el atril del jugador conectado", () => {
   assert.equal(hydrated.players[1].rack[0].letter, "A");
   assert.equal(hydrated.stateVersion, 3);
   assert.equal(hydrated.celebration.id, "move-2");
+  assert.deepEqual(hydrated.pendingTileKeys, ["9-14"]);
+  assert.deepEqual(hydrated.lastMoveKeys, ["9-13"]);
 });
 
 test("revela todos los atriles solamente en el estado final recibido", () => {

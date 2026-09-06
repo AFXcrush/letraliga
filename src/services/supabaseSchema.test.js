@@ -34,6 +34,18 @@ test("actualiza la sala recién creada sin referenciar variables inexistentes", 
   assert.doesNotMatch(createRoomFunction, /target_game/);
 });
 
+test("la vista previa online publica posiciones pero no datos de fichas", () => {
+  const previewFunction = schema.match(
+    /create or replace function public\.preview_game_turn[\s\S]*?\n\$\$;/,
+  )?.[0];
+
+  assert.ok(previewFunction, "preview_game_turn debe existir en el esquema");
+  assert.match(previewFunction, /preview_tile_keys jsonb/);
+  assert.match(previewFunction, /'\{pendingTileKeys\}'/);
+  assert.match(previewFunction, /'\{lastMoveKeys\}'/);
+  assert.doesNotMatch(previewFunction, /letter|points|tile_id/i);
+});
+
 test("programa una limpieza idempotente sin borrar partidas recientes", () => {
   assert.match(schema, /create extension if not exists pg_cron/);
   assert.match(schema, /create or replace function public\.cleanup_expired_game_data\(\)/);

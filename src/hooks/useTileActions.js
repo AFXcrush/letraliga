@@ -17,6 +17,7 @@ export function useTileActions({
   pendingTiles,
   currentPlayerIndex,
   setPendingTiles,
+  setLastMoveKeys,
   setPlayers,
   setStatusMessage,
 }) {
@@ -53,6 +54,7 @@ export function useTileActions({
         );
       }
       setStatusMessage(null);
+      setLastMoveKeys([]);
     },
     [
       canInteract,
@@ -61,6 +63,7 @@ export function useTileActions({
       placedTiles,
       setPendingTiles,
       setPlayers,
+      setLastMoveKeys,
       setStatusMessage,
     ],
   );

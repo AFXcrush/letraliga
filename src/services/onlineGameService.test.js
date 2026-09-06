@@ -7,6 +7,7 @@ import {
   joinOnlineRoom,
   leaveOnlineRoom,
   normalizeRoomCode,
+  previewOnlineTurn,
   startOnlineGame,
 } from "./onlineGameService.js";
 
@@ -105,6 +106,27 @@ test("inicia la sala y confirma turnos mediante funciones protegidas", async () 
         move_words: [{ word: "UN" }],
         move_points: 4,
         move_board_delta: { "9-13": {} },
+      },
+    },
+  ]);
+});
+
+test("sincroniza sólo las coordenadas de fichas pendientes", async () => {
+  const calls = [];
+  const client = {
+    rpc: async (name, args) => {
+      calls.push({ name, args });
+      return { data: null, error: null };
+    },
+  };
+
+  await previewOnlineTurn("game-1", ["9-13", "9-14"], client);
+  assert.deepEqual(calls, [
+    {
+      name: "preview_game_turn",
+      args: {
+        target_game_id: "game-1",
+        preview_tile_keys: ["9-13", "9-14"],
       },
     },
   ]);

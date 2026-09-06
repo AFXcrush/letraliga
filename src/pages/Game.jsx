@@ -10,6 +10,9 @@ import ThemeToggle from "../components/ThemeToggle.jsx";
 import WordStatusBar from "../components/WordStatusBar.jsx";
 import WordCelebration from "../components/WordCelebration.jsx";
 import { useGame } from "../context/GameContext.jsx";
+import { useWordPreviewValidation } from "../hooks/useWordPreviewValidation.js";
+import { unlockSoundEffects } from "../services/soundEffects.js";
+import { MIN_TILES_FIRST_TURN } from "../game/constants.js";
 
 export default function Game() {
   const [isBagOpen, setIsBagOpen] = useState(false);
@@ -26,6 +29,8 @@ export default function Game() {
     bagCounts,
     placedTiles,
     pendingTiles,
+    remotePendingKeys,
+    lastMoveKeys,
     isOpeningTurn,
     pendingWordPreview,
     statusMessage,
@@ -57,6 +62,12 @@ export default function Game() {
     () => currentPlayer?.rack.find((tile) => tile.id === selectedTileId) ?? null,
     [currentPlayer, selectedTileId],
   );
+  const pendingTileCount = Object.keys(pendingTiles).length;
+  const hasMinimumPreviewTiles =
+    pendingTileCount >= (isOpeningTurn ? MIN_TILES_FIRST_TURN : 1);
+  const previewValidation = useWordPreviewValidation(
+    hasMinimumPreviewTiles ? pendingWordPreview : null,
+  );
 
   useEffect(() => {
     if (selectedTileId && !selectedTile) setSelectedTileId(null);
@@ -65,6 +76,16 @@ export default function Game() {
   useEffect(() => {
     if (!canTakeTurn) setSelectedTileId(null);
   }, [canTakeTurn]);
+
+  useEffect(() => {
+    const unlock = () => unlockSoundEffects();
+    window.addEventListener("pointerdown", unlock, { once: true });
+    window.addEventListener("keydown", unlock, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, []);
 
   const selectRackTile = (tileId) => {
     setSelectedTileId((currentId) => (currentId === tileId ? null : tileId));
@@ -166,6 +187,8 @@ export default function Game() {
             scale={scale}
             placedTiles={placedTiles}
             pendingTiles={pendingTiles}
+            maskedPendingKeys={remotePendingKeys}
+            lastMoveKeys={pendingTileCount > 0 ? [] : lastMoveKeys}
             celebratingKeys={celebration?.cellsKeys ?? []}
             onDropTile={canTakeTurn ? placeTile : undefined}
             onSelectCell={canTakeTurn ? placeSelectedTile : undefined}
@@ -176,7 +199,8 @@ export default function Game() {
 
       <WordStatusBar
         pendingWordPreview={pendingWordPreview}
-        pendingTileCount={Object.keys(pendingTiles).length}
+        pendingTileCount={pendingTileCount}
+        previewValidation={previewValidation}
         isOpeningTurn={isOpeningTurn}
         statusMessage={statusMessage}
         checking={checking}

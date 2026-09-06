@@ -15,6 +15,9 @@ export function useGameState() {
   const [pendingTiles, setPendingTiles] = useState(
     savedGame?.pendingTiles ?? {},
   );
+  const [lastMoveKeys, setLastMoveKeys] = useState(
+    savedGame?.lastMoveKeys ?? [],
+  );
   const [statusMessage, setStatusMessage] = useState(
     savedGame?.statusMessage ?? null,
   );
@@ -51,6 +54,8 @@ export function useGameState() {
     setPlacedTiles,
     pendingTiles,
     setPendingTiles,
+    lastMoveKeys,
+    setLastMoveKeys,
     statusMessage,
     setStatusMessage,
     celebration,

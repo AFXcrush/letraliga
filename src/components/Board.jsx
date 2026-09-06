@@ -5,6 +5,8 @@ export default function Board({
   scale = 1,
   placedTiles = {},
   pendingTiles = {},
+  maskedPendingKeys = [],
+  lastMoveKeys = [],
   celebratingKeys = [],
   onDropTile,
   onSelectCell,
@@ -51,6 +53,7 @@ export default function Board({
         rowData.map((type, c) => {
           const key = `${r}-${c}`;
           const tile = pendingTiles[key] ?? placedTiles[key];
+          const isOpponentPending = maskedPendingKeys.includes(key) && !tile;
           return (
             <Cell
               key={key}
@@ -59,10 +62,12 @@ export default function Board({
               col={c}
               placedTile={tile}
               isPending={Boolean(pendingTiles[key])}
+              isOpponentPending={isOpponentPending}
+              isLastMove={lastMoveKeys.includes(key)}
               isCelebrating={celebratingKeys.includes(key)}
               onDropTile={onDropTile}
               onSelectCell={onSelectCell}
-              isClickTarget={hasSelectedTile && !tile}
+              isClickTarget={hasSelectedTile && !tile && !isOpponentPending}
             />
           );
         }),

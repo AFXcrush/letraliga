@@ -35,4 +35,23 @@ describe("modal de significados", () => {
       "https://es.wiktionary.org/wiki/casa",
     );
   });
+
+  test("muestra primero la palabra confirmada más recientemente", async () => {
+    const loadMeaning = vi.fn().mockResolvedValue({ definitions: [] });
+
+    render(
+      <WordMeaningsModal
+        playedWords={[
+          { word: "casa", playerId: "p1", playerName: "Ana", points: 8 },
+          { word: "barco", playerId: "p2", playerName: "Luis", points: 12 },
+        ]}
+        open
+        onClose={() => {}}
+        loadMeaning={loadMeaning}
+      />,
+    );
+
+    const headings = await screen.findAllByRole("heading", { level: 3 });
+    expect(headings.map(({ textContent }) => textContent)).toEqual(["BARCO", "CASA"]);
+  });
 });

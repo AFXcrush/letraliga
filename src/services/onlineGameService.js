@@ -76,6 +76,19 @@ export async function startOnlineGame(
   return data;
 }
 
+export async function previewOnlineTurn(
+  gameId,
+  tileKeys,
+  client = supabase,
+) {
+  const activeClient = requireClient(client);
+  const { error } = await activeClient.rpc("preview_game_turn", {
+    target_game_id: gameId,
+    preview_tile_keys: tileKeys,
+  });
+  if (error) throw error;
+}
+
 export async function commitOnlineTurn(
   {
     gameId,
