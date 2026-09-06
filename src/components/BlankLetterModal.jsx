@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { BLANK_LETTERS } from "../utils/blankTile.js";
 
 export default function BlankLetterModal({ open, onChoose, onClose }) {
@@ -13,7 +14,7 @@ export default function BlankLetterModal({ open, onChoose, onClose }) {
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       className="bag-modal blank-modal"
       onMouseDown={(event) => {
@@ -55,6 +56,7 @@ export default function BlankLetterModal({ open, onChoose, onClose }) {
           ))}
         </div>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -1052,18 +1052,40 @@ body {
 }
 
 .blank-modal__dialog {
+  display: flex;
+  flex-direction: column;
   width: min(450px, 100%);
+  max-height: calc(100dvh - 16px);
+  overflow: hidden;
+}
+
+.blank-modal {
+  padding-top: max(8px, env(safe-area-inset-top));
+  padding-right: max(8px, env(safe-area-inset-right));
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  padding-left: max(8px, env(safe-area-inset-left));
+}
+
+.blank-modal__dialog .bag-modal__header {
+  flex: 0 0 auto;
 }
 
 .blank-modal__alphabet {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(48px, 1fr));
+  grid-template-columns: repeat(7, minmax(36px, 1fr));
   gap: 9px;
+  min-height: 0;
+  padding: 2px 4px 6px 2px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 .blank-modal__letter {
   aspect-ratio: 1;
+  width: 100%;
   min-width: 0;
+  min-height: 36px;
   border: 1px solid var(--tile-border);
   border-radius: 9px;
   background: var(--tile-bg);
@@ -1073,6 +1095,33 @@ body {
   font-size: 18px;
   font-weight: 900;
   cursor: pointer;
+}
+
+@media (max-width: 520px), (max-height: 620px) {
+  .blank-modal__dialog {
+    padding: 12px;
+  }
+
+  .blank-modal__dialog .bag-modal__header {
+    margin-bottom: 8px;
+  }
+
+  .blank-modal__dialog .bag-modal__header h2 {
+    font-size: 18px;
+  }
+
+  .blank-modal__dialog .bag-modal__header p {
+    font-size: 11px;
+  }
+
+  .blank-modal__alphabet {
+    gap: 6px;
+  }
+
+  .blank-modal__letter {
+    border-radius: 7px;
+    font-size: 15px;
+  }
 }
 
 .blank-modal__letter:hover {
