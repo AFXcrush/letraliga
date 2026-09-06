@@ -125,6 +125,9 @@ src/
   alguien vació su atril, recibe la suma de las penalizaciones de sus rivales.
 - Las fichas pueden colocarse arrastrándolas o pulsando primero la ficha y luego
   la casilla. La segunda opción también funciona en pantallas táctiles.
+- Cada jugador puede ordenar manualmente las fichas de su atril o mezclarlas
+  aunque esté esperando el turno; las acciones sobre el tablero siguen
+  bloqueadas hasta que le corresponda jugar.
 - En móviles, el tablero admite paneo con un dedo y zoom con dos dedos. Con
   teclado se seleccionan fichas con Enter/Espacio y se recorren las casillas
   usando las flechas. Durante la partida el tablero ocupa toda la pantalla y
@@ -152,7 +155,7 @@ Para habilitar el modo online:
 
 1. Crea un proyecto gratis en [supabase.com](https://supabase.com).
 2. Copia `.env.example` a `.env` y completa `VITE_SUPABASE_URL` y
-   `VITE_SUPABASE_PUBLISHABLE_KEY` (los encontrás en el diálogo Connect o en
+   `VITE_SUPABASE_PUBLISHABLE_KEY` (los encuentras en el diálogo Connect o en
    Project Settings → API Keys). También se admite `VITE_SUPABASE_ANON_KEY`
    para proyectos que todavía usen la clave pública heredada.
 3. Ejecuta `supabase/schema.sql` en el SQL Editor.
@@ -164,6 +167,11 @@ políticas RLS. El cliente utiliza autenticación anónima y permite crear o uni
 a una sala mediante un código de seis caracteres. El anfitrión inicia cuando hay
 al menos dos jugadores y los cambios de tablero, marcador y turno se propagan
 mediante Realtime.
+
+Al terminar una partida online, cualquiera de los participantes que permanezca
+en la sala puede iniciar una revancha. Se conservan la sala y sus jugadores,
+pero se limpian el tablero, los puntajes y las jugadas anteriores antes de
+repartir fichas nuevas.
 
 Mientras el jugador activo prepara su jugada, los demás ven únicamente fichas
 blancas en las coordenadas ocupadas. Las letras, sus puntos y sus identificadores

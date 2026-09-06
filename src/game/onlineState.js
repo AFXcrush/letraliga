@@ -8,6 +8,17 @@ export function countBagTiles(bag) {
   }, {});
 }
 
+export function applyPreferredRackOrder(authoritativeRack, preferredRack) {
+  if (authoritativeRack.length !== preferredRack.length) {
+    return authoritativeRack;
+  }
+  const tilesById = new Map(authoritativeRack.map((tile) => [tile.id, tile]));
+  if (preferredRack.some(({ id }) => !tilesById.has(id))) {
+    return authoritativeRack;
+  }
+  return preferredRack.map((tile) => ({ ...tilesById.get(tile.id), ...tile }));
+}
+
 export function createOnlinePublicState(state) {
   return {
     phase: state.phase,

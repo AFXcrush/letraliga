@@ -46,6 +46,21 @@ test("la vista previa online publica posiciones pero no datos de fichas", () => 
   assert.doesNotMatch(previewFunction, /letter|points|tile_id/i);
 });
 
+test("permite una revancha limpia entre quienes permanecen en la sala", () => {
+  const startFunction = schema.match(
+    /create or replace function public\.start_game_room[\s\S]*?\n\$\$;/,
+  )?.[0];
+
+  assert.ok(startFunction, "start_game_room debe existir en el esquema");
+  assert.match(startFunction, /status not in \('waiting', 'finished'\)/);
+  assert.match(startFunction, /delete from public\.moves where game_id = target_game_id/);
+  assert.match(startFunction, /update public\.game_players[\s\S]*set score = 0/);
+  assert.doesNotMatch(
+    startFunction,
+    /update public\.game_players[\s\S]*set score = 0, updated_at/,
+  );
+});
+
 test("programa una limpieza idempotente sin borrar partidas recientes", () => {
   assert.match(schema, /create extension if not exists pg_cron/);
   assert.match(schema, /create or replace function public\.cleanup_expired_game_data\(\)/);

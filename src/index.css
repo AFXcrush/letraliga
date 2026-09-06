@@ -766,8 +766,17 @@ html.dark .cell--3W:not(.cell--occupied):not(.cell--opponent-pending) {
 }
 
 /* ---------- Cambio de fichas ---------- */
+.exchange-modal,
+.exchange-confirmation {
+  padding-top: max(8px, env(safe-area-inset-top));
+  padding-right: max(8px, env(safe-area-inset-right));
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  padding-left: max(8px, env(safe-area-inset-left));
+}
+
 .exchange-modal__dialog {
   width: min(520px, 100%);
+  max-height: calc(100dvh - 16px);
 }
 
 .exchange-modal__tiles {
@@ -836,6 +845,7 @@ html.dark .cell--3W:not(.cell--occupied):not(.cell--opponent-pending) {
 
 .exchange-confirmation__dialog {
   width: min(420px, 100%);
+  max-height: calc(100dvh - 16px);
 }
 
 .exchange-confirmation__dialog h3 {

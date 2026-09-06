@@ -386,11 +386,19 @@ begin
   select * into target_game from public.games
   where id = target_game_id for update;
 
-  if target_game.id is null or target_game.host_user_id <> (select auth.uid()) then
+  if target_game.id is null or not exists (
+    select 1 from public.game_players gp
+    where gp.game_id = target_game_id
+      and gp.user_id = (select auth.uid())
+  ) then
+    raise exception 'Room access denied';
+  end if;
+  if target_game.status = 'waiting'
+    and target_game.host_user_id <> (select auth.uid()) then
     raise exception 'Only the host can start this room';
   end if;
-  if target_game.status <> 'waiting' then
-    raise exception 'Room is not waiting';
+  if target_game.status not in ('waiting', 'finished') then
+    raise exception 'Room cannot start a match';
   end if;
   if (select count(*) from public.game_players where game_id = target_game_id) < 2 then
     raise exception 'At least two players are required';
@@ -410,6 +418,13 @@ begin
   ) then
     raise exception 'Invalid initial player';
   end if;
+
+  -- Una revancha reutiliza la sala, pero no mezcla resultados ni jugadas de
+  -- la partida anterior con el tablero nuevo.
+  delete from public.moves where game_id = target_game_id;
+  update public.game_players
+  set score = 0
+  where game_id = target_game_id;
 
   for rack_entry in select * from jsonb_array_elements(initial_racks)
   loop

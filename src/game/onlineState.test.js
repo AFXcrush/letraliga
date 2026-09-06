@@ -1,9 +1,28 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  applyPreferredRackOrder,
   createOnlinePublicState,
   hydrateOnlineRoom,
 } from "./onlineState.js";
+
+test("conserva el orden local si el servidor devuelve las mismas fichas", () => {
+  const authoritative = [
+    { id: "a", letter: "A", points: 1 },
+    { id: "b", letter: "B", points: 3 },
+    { id: "c", letter: "C", points: 3 },
+  ];
+  const preferred = [{ id: "c" }, { id: "a" }, { id: "b" }];
+
+  assert.deepEqual(
+    applyPreferredRackOrder(authoritative, preferred).map(({ id }) => id),
+    ["c", "a", "b"],
+  );
+  assert.equal(
+    applyPreferredRackOrder(authoritative, [{ id: "otra" }]),
+    authoritative,
+  );
+});
 
 test("el estado público online no expone atriles ni el orden de la bolsa", () => {
   const state = createOnlinePublicState({

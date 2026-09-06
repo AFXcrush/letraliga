@@ -4,6 +4,21 @@ import { describe, expect, test, vi } from "vitest";
 import ExchangeTilesModal from "./ExchangeTilesModal.jsx";
 
 describe("modal de cambio de fichas", () => {
+  test("se monta en la página y no hereda la posición del atril", () => {
+    render(
+      <ExchangeTilesModal
+        tiles={[{ id: "a", letter: "A", points: 1 }]}
+        bagCount={4}
+        open
+        onClose={vi.fn()}
+        onConfirm={vi.fn()}
+      />,
+    );
+
+    const dialog = screen.getByRole("dialog", { name: "Cambiar fichas" });
+    expect(dialog.closest(".exchange-modal")?.parentElement).toBe(document.body);
+  });
+
   test("pide confirmación antes de ejecutar el cambio", async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn(() => true);

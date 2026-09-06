@@ -2,6 +2,7 @@ import { useState } from "react";
 import BlankLetterModal from "./BlankLetterModal.jsx";
 import ExchangeTilesModal from "./ExchangeTilesModal.jsx";
 import LetterTile from "./LetterTile.jsx";
+import { readTileDragData } from "../utils/tileDrag.js";
 
 export default function Rack({
   tiles,
@@ -11,31 +12,32 @@ export default function Rack({
   onAssignBlank,
   onExchange,
   onSelectTile,
+  onReorderTile,
   selectedTileId,
   canRecall,
-  disabled,
+  turnDisabled,
+  reorderDisabled,
   bagCount,
 }) {
   const [blankTileId, setBlankTileId] = useState(null);
   const [isExchangeOpen, setIsExchangeOpen] = useState(false);
   const handleDragOver = (e) => {
+    if (reorderDisabled) return;
     e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
   };
 
   const handleDrop = (e) => {
+    if (reorderDisabled) return;
     e.preventDefault();
-    const raw =
-      e.dataTransfer.getData("application/json") ||
-      e.dataTransfer.getData("text/plain");
-    if (!raw) return;
-    let tile;
-    try {
-      tile = JSON.parse(raw);
-    } catch {
+    const tile = readTileDragData(e.dataTransfer);
+    if (!tile) return;
+    if (tile.from === "rack") {
+      onReorderTile?.(tile.id, null);
       return;
     }
     // Solo nos interesa si la ficha venía del tablero (from: {row, col}).
-    if (tile.from && tile.from !== "rack") {
+    if (!turnDisabled && tile.from) {
       onReturnTile?.(tile);
     }
   };
@@ -63,7 +65,7 @@ export default function Rack({
           type="button"
           className="rack-action"
           onClick={onRecall}
-          disabled={!canRecall || disabled}
+          disabled={!canRecall || turnDisabled || reorderDisabled}
           title="Devolver al atril todas las fichas colocadas en este turno"
         >
           <span aria-hidden="true">↩</span> Retornar al atril
@@ -72,7 +74,7 @@ export default function Rack({
           type="button"
           className="rack-action"
           onClick={onShuffle}
-          disabled={tiles.length < 2 || disabled}
+          disabled={tiles.length < 2 || reorderDisabled}
           title="Cambiar el orden de las fichas del atril"
         >
           <span aria-hidden="true">⇄</span> Mezclar fichas
@@ -95,8 +97,10 @@ export default function Rack({
             isBlank={tile.isBlank}
             onChooseBlank={() => setBlankTileId(tile.id)}
             onSelect={() => onSelectTile?.(tile.id)}
+            onReorderTile={onReorderTile}
             selected={selectedTileId === tile.id}
-            disabled={disabled}
+            placementDisabled={turnDisabled}
+            reorderDisabled={reorderDisabled}
           />
         ))}
       </div>
@@ -105,7 +109,9 @@ export default function Rack({
         type="button"
         className="rack-action rack-action--exchange"
         onClick={() => setIsExchangeOpen(true)}
-        disabled={bagCount === 0 || canRecall || disabled}
+        disabled={
+          bagCount === 0 || canRecall || turnDisabled || reorderDisabled
+        }
         title={
           canRecall
             ? "Retorna primero las fichas pendientes al atril"

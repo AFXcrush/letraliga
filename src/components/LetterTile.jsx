@@ -1,3 +1,5 @@
+import { readTileDragData, writeTileDragData } from "../utils/tileDrag.js";
+
 // Ficha de letra individual del atril.
 export default function LetterTile({
   id,
@@ -6,33 +8,24 @@ export default function LetterTile({
   isBlank,
   onChooseBlank,
   onSelect,
+  onReorderTile,
   selected,
-  disabled = false,
+  placementDisabled = false,
+  reorderDisabled = false,
 }) {
   const handleDragStart = (e) => {
-    if (disabled) return;
-    const payload = JSON.stringify({
+    if (reorderDisabled) return;
+    writeTileDragData(e.dataTransfer, {
       id,
       letter,
       points,
       isBlank,
       from: "rack",
     });
-
-    // Firefox y algunos navegadores basados en WebKit pueden ignorar tipos
-    // personalizados durante un arrastre. text/plain mantiene el movimiento
-    // disponible cuando application/json no se admite.
-    try {
-      e.dataTransfer.setData("application/json", payload);
-    } catch {
-      // El formato de respaldo se registra debajo.
-    }
-    e.dataTransfer.setData("text/plain", payload);
-    e.dataTransfer.effectAllowed = "move";
   };
 
   const handleClick = () => {
-    if (disabled) return;
+    if (placementDisabled || reorderDisabled) return;
     if (isBlank && (!letter || selected)) {
       onChooseBlank?.();
       return;
@@ -40,18 +33,43 @@ export default function LetterTile({
     onSelect?.();
   };
 
+  const handleDragOver = (event) => {
+    if (reorderDisabled) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = (event) => {
+    if (reorderDisabled) return;
+    const tile = readTileDragData(event.dataTransfer);
+    if (tile?.from === "rack") {
+      event.preventDefault();
+      event.stopPropagation();
+      if (tile.id !== id) onReorderTile?.(tile.id, id);
+    }
+  };
+
   return (
     <button
-      className={`letter-tile${selected ? " letter-tile--selected" : ""}`}
-      draggable={!disabled && (!isBlank || Boolean(letter))}
-      disabled={disabled}
+      className={`letter-tile${selected ? " letter-tile--selected" : ""}${
+        placementDisabled ? " letter-tile--placement-disabled" : ""
+      }`}
+      draggable={!reorderDisabled}
+      disabled={reorderDisabled}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
+      onDragEnter={handleDragOver}
+      onDrop={handleDrop}
       onClick={handleClick}
       aria-pressed={selected}
+      aria-disabled={placementDisabled || reorderDisabled}
       title={
-        isBlank && (!letter || selected)
-          ? "Elegir la letra del comodín"
-          : "Seleccionar ficha para colocarla con un clic"
+        placementDisabled && !reorderDisabled
+          ? "Arrastra la ficha para ordenar tu atril"
+          : isBlank && (!letter || selected)
+            ? "Elegir la letra del comodín"
+            : "Seleccionar ficha para colocarla con un clic"
       }
       aria-label={
         isBlank && letter

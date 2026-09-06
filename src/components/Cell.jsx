@@ -1,4 +1,5 @@
 import { LETTER_MULTIPLIERS } from "../layout/letterData.js";
+import { readTileDragData, writeTileDragData } from "../utils/tileDrag.js";
 
 // Cada casilla del tablero. Si tiene una ficha encima, muestra el puntaje
 // YA multiplicado por el tipo de casilla (2L/3L); si la ficha se mueve a
@@ -53,29 +54,17 @@ export default function Cell({
   const handleDrop = (e) => {
     e.preventDefault();
     if (placedTile || isOpponentPending) return;
-    const raw =
-      e.dataTransfer.getData("application/json") ||
-      e.dataTransfer.getData("text/plain");
-    if (!raw) return;
-    let tile;
-    try {
-      tile = JSON.parse(raw);
-    } catch {
-      return;
-    }
+    const tile = readTileDragData(e.dataTransfer);
+    if (!tile || (tile.isBlank && !tile.letter)) return;
     onDropTile?.({ row, col, tile });
   };
 
   const handleDragStart = (e) => {
     if (!placedTile || !isPending) return; // las confirmadas quedan fijas
-    const payload = JSON.stringify({ ...placedTile, from: { row, col } });
-    try {
-      e.dataTransfer.setData("application/json", payload);
-    } catch {
-      // El formato de respaldo se registra debajo.
-    }
-    e.dataTransfer.setData("text/plain", payload);
-    e.dataTransfer.effectAllowed = "move";
+    writeTileDragData(e.dataTransfer, {
+      ...placedTile,
+      from: { row, col },
+    });
   };
 
   return (

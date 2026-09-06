@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { shuffleBag } from "../layout/letterData.js";
 import { assignBlankLetter, resetBlankTile } from "../utils/blankTile.js";
+import { moveRackTile } from "../utils/rackOrder.js";
 
 function tileForRack(tile) {
   return resetBlankTile({
@@ -13,9 +14,11 @@ function tileForRack(tile) {
 
 export function useTileActions({
   canInteract = true,
+  canReorderRack = canInteract,
   placedTiles,
   pendingTiles,
   currentPlayerIndex,
+  rackPlayerIndex = currentPlayerIndex,
   setPendingTiles,
   setLastMoveKeys,
   setPlayers,
@@ -141,10 +144,10 @@ export function useTileActions({
   );
 
   const shuffleRack = useCallback(() => {
-    if (!canInteract) return;
+    if (!canReorderRack || rackPlayerIndex < 0) return;
     setPlayers((players) =>
       players.map((player, index) => {
-        if (index !== currentPlayerIndex || player.rack.length < 2) {
+        if (index !== rackPlayerIndex || player.rack.length < 2) {
           return player;
         }
 
@@ -157,7 +160,24 @@ export function useTileActions({
         return { ...player, rack: shuffled };
       }),
     );
-  }, [canInteract, currentPlayerIndex, setPlayers]);
+  }, [canReorderRack, rackPlayerIndex, setPlayers]);
+
+  const reorderRack = useCallback(
+    (tileId, targetTileId = null) => {
+      if (!canReorderRack || rackPlayerIndex < 0 || tileId === targetTileId) {
+        return;
+      }
+
+      setPlayers((players) =>
+        players.map((player, index) => {
+          if (index !== rackPlayerIndex) return player;
+          const nextRack = moveRackTile(player.rack, tileId, targetTileId);
+          return nextRack === player.rack ? player : { ...player, rack: nextRack };
+        }),
+      );
+    },
+    [canReorderRack, rackPlayerIndex, setPlayers],
+  );
 
   return {
     placeTile,
@@ -165,5 +185,6 @@ export function useTileActions({
     recallPendingTiles,
     assignBlank,
     shuffleRack,
+    reorderRack,
   };
 }

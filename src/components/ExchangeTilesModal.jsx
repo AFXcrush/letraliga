@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 export default function ExchangeTilesModal({
   tiles,
@@ -51,9 +52,9 @@ export default function ExchangeTilesModal({
     }
   };
 
-  return (
+  return createPortal(
     <div
-      className="bag-modal"
+      className="bag-modal exchange-modal"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -160,6 +161,7 @@ export default function ExchangeTilesModal({
           </section>
         </div>
       )}
-    </div>
+    </div>,
+    document.body,
   );
 }

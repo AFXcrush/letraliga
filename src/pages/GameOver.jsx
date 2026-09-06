@@ -19,6 +19,9 @@ export default function GameOver() {
     dismissCelebration,
     toggleDarkMode,
     resetToLobby,
+    startOnlineMatch,
+    isOnlineGame,
+    checking,
     gameEndReason,
   } = useGame();
   const ranking = applyFinalScoring(players).sort(
@@ -125,8 +128,17 @@ export default function GameOver() {
           </div>
         </div>
 
-        <button type="button" className="btn btn--primary lobby__submit" onClick={resetToLobby}>
-          Jugar otra partida
+        <button
+          type="button"
+          className="btn btn--primary lobby__submit"
+          onClick={isOnlineGame ? startOnlineMatch : resetToLobby}
+          disabled={checking}
+        >
+          {checking
+            ? "Preparando partida…"
+            : isOnlineGame
+              ? "Jugar otra vez"
+              : "Jugar otra partida"}
         </button>
         </section>
       </div>

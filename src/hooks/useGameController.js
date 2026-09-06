@@ -3,6 +3,7 @@ import { GAME_PHASES } from "../game/constants.js";
 import { createInitialGame } from "../game/gameSetup.js";
 import { getVisibleStatusMessage } from "../game/turnResult.js";
 import {
+  applyPreferredRackOrder,
   createOnlinePublicState,
   hydrateOnlineRoom,
 } from "../game/onlineState.js";
@@ -51,12 +52,20 @@ export function useGameController() {
   const localPlayer = state.onlineSession
     ? state.players.find(({ id }) => id === state.onlineSession.playerId) ?? null
     : currentPlayer;
+  const localPlayerIndex = state.onlineSession
+    ? state.players.findIndex(({ id }) => id === state.onlineSession.playerId)
+    : state.currentPlayerIndex;
   const isOnlineGame = Boolean(state.onlineSession?.gameId);
   const canTakeTurn =
     !isOnlineGame ||
     (state.phase === GAME_PHASES.PLAYING &&
       currentPlayer?.id === state.onlineSession?.playerId &&
       !onlineSyncRequest);
+  const canReorderRack =
+    state.phase === GAME_PHASES.PLAYING &&
+    localPlayerIndex >= 0 &&
+    !state.checking &&
+    !onlineSyncRequest;
   const boardState = useBoardState(state.placedTiles, state.pendingTiles);
   const isOpeningTurn = Object.keys(state.placedTiles).length === 0;
 
@@ -71,9 +80,11 @@ export function useGameController() {
 
   const tileActions = useTileActions({
     canInteract: canTakeTurn,
+    canReorderRack,
     placedTiles: state.placedTiles,
     pendingTiles: state.pendingTiles,
     currentPlayerIndex: state.currentPlayerIndex,
+    rackPlayerIndex: localPlayerIndex,
     setPendingTiles: state.setPendingTiles,
     setLastMoveKeys: state.setLastMoveKeys,
     setPlayers: state.setPlayers,
@@ -116,14 +127,27 @@ export function useGameController() {
       const userId = sessionDetails.userId ?? state.onlineSession?.userId;
 
       state.setPlayers((currentPlayers) => {
-        const preserveRack =
-          sessionDetails.preservePending &&
-          hydrated.players[hydrated.currentPlayerIndex]?.id === playerId;
-        if (!preserveRack) return hydrated.players;
         const localRack =
           currentPlayers.find(({ id }) => id === playerId)?.rack ?? [];
+        const authoritativeRack =
+          hydrated.players.find(({ id }) => id === playerId)?.rack ?? [];
+        const authoritativeIds = new Set(
+          authoritativeRack.map(({ id }) => id),
+        );
+        const preservePendingRack =
+          sessionDetails.preservePending &&
+          localRack.length < authoritativeRack.length &&
+          localRack.every(({ id }) => authoritativeIds.has(id)) &&
+          hydrated.players[hydrated.currentPlayerIndex]?.id === playerId;
+        if (!preservePendingRack && !sessionDetails.preservePending) {
+          return hydrated.players;
+        }
+
+        const preferredRack = preservePendingRack
+          ? localRack
+          : applyPreferredRackOrder(authoritativeRack, localRack);
         return hydrated.players.map((player) =>
-          player.id === playerId ? { ...player, rack: localRack } : player,
+          player.id === playerId ? { ...player, rack: preferredRack } : player,
         );
       });
       state.setCurrentPlayerIndex(hydrated.currentPlayerIndex);
@@ -321,7 +345,7 @@ export function useGameController() {
 
   const startOnlineMatch = useCallback(async () => {
     const session = state.onlineSession;
-    if (!session?.gameId || !session.isHost) return false;
+    if (!session?.gameId) return false;
     state.setChecking(true);
     try {
       const room = await getOnlineRoom(session.gameId);
@@ -462,6 +486,7 @@ export function useGameController() {
     onlineSession: state.onlineSession,
     isOnlineGame,
     canTakeTurn,
+    canReorderRack,
     startGame,
     createOnlineSession,
     joinOnlineSession,

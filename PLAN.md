@@ -70,6 +70,8 @@ por accidente.
 - [x] Ocultar el atril y el orden de la bolsa a los demás participantes.
 - [x] Recuperar una sala al recargar mientras se conserve la sesión anónima.
 - [x] Permitir salir de una sala de espera y finalizar una partida abandonada.
+- [x] Permitir revanchas online sin abandonar la sala.
+- [x] Permitir ordenar el atril propio mientras se espera el turno.
 - [ ] Mover la validación del diccionario y la resolución completa de puntaje
   al backend para obtener protección antitrampas total.
 - [ ] Gestionar reconexiones, jugadores ausentes y partidas abandonadas.

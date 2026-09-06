@@ -42,11 +42,13 @@ export default function Game() {
     isFinalTurnOwnerTurn,
     isOnlineGame,
     canTakeTurn,
+    canReorderRack,
     onlineSession,
     placeTile,
     returnTileToRack,
     recallPendingTiles,
     shuffleRack,
+    reorderRack,
     assignBlank,
     exchangeTiles,
     confirmWord,
@@ -214,12 +216,14 @@ export default function Game() {
         onReturnTile={returnTileToRack}
         onRecall={recallPendingTiles}
         onShuffle={shuffleRack}
+        onReorderTile={reorderRack}
         onAssignBlank={assignBlank}
         onExchange={exchangeTiles}
         onSelectTile={selectRackTile}
         selectedTileId={selectedTileId}
         canRecall={Object.keys(pendingTiles).length > 0}
-        disabled={checking || !canTakeTurn}
+        turnDisabled={checking || !canTakeTurn}
+        reorderDisabled={!canReorderRack}
         bagCount={tilesRemaining}
       />
     </div>
