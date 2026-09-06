@@ -1626,6 +1626,8 @@ html.dark .cell--3W:not(.cell--occupied):not(.cell--opponent-pending) {
   width: 100vw;
   height: 100dvh;
   min-height: 0;
+  display: block;
+  padding: 0;
   overflow: hidden;
   background: var(--bg-cream);
 }
@@ -1633,8 +1635,8 @@ html.dark .cell--3W:not(.cell--occupied):not(.cell--opponent-pending) {
 .game-over__board {
   position: fixed;
   inset: 0;
-  display: grid;
-  place-items: center;
+  min-width: 0;
+  min-height: 0;
   padding: 0;
 }
 
@@ -1645,8 +1647,6 @@ html.dark .cell--3W:not(.cell--occupied):not(.cell--opponent-pending) {
   border: 0;
   border-radius: 0;
   background: transparent;
-  display: grid;
-  place-items: center;
 }
 
 .game-over__overlay {
@@ -1665,6 +1665,7 @@ html.dark .cell--3W:not(.cell--occupied):not(.cell--opponent-pending) {
 
 .game-over__card {
   width: min(450px, 100%);
+  max-width: 450px;
   padding: 26px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 80%, transparent);
   border-radius: 18px;
@@ -1750,7 +1751,7 @@ html.dark .cell--3W:not(.cell--occupied):not(.cell--opponent-pending) {
   font-size: 18px;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 960px) {
   .game-over__overlay {
     align-items: end;
     justify-items: center;
@@ -1761,7 +1762,9 @@ html.dark .cell--3W:not(.cell--occupied):not(.cell--opponent-pending) {
     padding: 18px;
     background: color-mix(in srgb, var(--panel-bg) 70%, transparent);
   }
+}
 
+@media (max-width: 520px) {
   .game-over__highlights {
     grid-template-columns: 1fr;
   }

@@ -9,6 +9,30 @@ import { GAME_END_REASONS } from "../game/constants.js";
 import { applyFinalScoring } from "../game/finalScoring.js";
 import { playVictorySound } from "../services/soundEffects.js";
 
+const BOARD_COLUMNS = 27;
+const BOARD_ROWS = 19;
+const BASE_CELL_SIZE = 32;
+const BOARD_GAP = 3;
+const BOARD_PADDING = 16;
+
+function getFinalBoardScale() {
+  const availableWidth = window.innerWidth - 32;
+  const availableHeight = window.innerHeight;
+  const horizontalChrome =
+    (BOARD_COLUMNS - 1) * BOARD_GAP + BOARD_PADDING;
+  const verticalChrome = (BOARD_ROWS - 1) * BOARD_GAP + BOARD_PADDING;
+
+  return Math.max(
+    0.4,
+    Math.min(
+      2.5,
+      (availableWidth - horizontalChrome) /
+        (BOARD_COLUMNS * BASE_CELL_SIZE),
+      (availableHeight - verticalChrome) / (BOARD_ROWS * BASE_CELL_SIZE),
+    ),
+  );
+}
+
 export default function GameOver() {
   const {
     players,
@@ -36,14 +60,7 @@ export default function GameOver() {
     gameEndReason === GAME_END_REASONS.SCORELESS_TURNS;
   const endedByPlayerLeaving =
     gameEndReason === GAME_END_REASONS.PLAYER_LEFT;
-  const boardScale = Math.max(
-    0.4,
-    Math.min(
-      1,
-      (window.innerWidth - 110) / (27 * 32),
-      (window.innerHeight - 110) / (19 * 32),
-    ),
-  );
+  const boardScale = getFinalBoardScale();
 
   useEffect(() => {
     const victoryTimeout = window.setTimeout(playVictorySound, 500);
