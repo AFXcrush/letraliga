@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useGame } from "../context/GameContext.jsx";
 import Board from "../components/Board.jsx";
 import PanZoom from "../components/PanZoom.jsx";
@@ -6,6 +7,7 @@ import WordCelebration from "../components/WordCelebration.jsx";
 import { getGameHighlights } from "../utils/gameStats.js";
 import { GAME_END_REASONS } from "../game/constants.js";
 import { applyFinalScoring } from "../game/finalScoring.js";
+import { playVictorySound } from "../services/soundEffects.js";
 
 export default function GameOver() {
   const {
@@ -39,6 +41,11 @@ export default function GameOver() {
       (window.innerHeight - 110) / (19 * 32),
     ),
   );
+
+  useEffect(() => {
+    const victoryTimeout = window.setTimeout(playVictorySound, 500);
+    return () => window.clearTimeout(victoryTimeout);
+  }, []);
 
   return (
     <div className="game-over">
