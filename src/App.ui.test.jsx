@@ -4,12 +4,17 @@ import { describe, expect, test } from "vitest";
 import App from "./App.jsx";
 import { saveGameSnapshot } from "./services/gameStorage.js";
 
-function createDataTransfer() {
+function createDataTransfer({ rejectJson = false } = {}) {
   const values = new Map();
   return {
     dropEffect: "none",
     effectAllowed: "all",
-    setData: (type, value) => values.set(type, value),
+    setData: (type, value) => {
+      if (rejectJson && type === "application/json") {
+        throw new Error("Formato no admitido");
+      }
+      values.set(type, value);
+    },
     getData: (type) => values.get(type) ?? "",
   };
 }
@@ -108,6 +113,24 @@ describe("interacción entre el atril y el tablero", () => {
     expect(
       screen.getByRole("button", { name: "Retornar al atril" }),
     ).toBeEnabled();
+  });
+
+  test("usa texto plano si el navegador rechaza el formato de arrastre JSON", async () => {
+    await startGame();
+    const tile = getFirstRegularTile();
+    const tileLetter = tile.querySelector(".letter-tile__letter").textContent;
+    const centerCell = screen.getByRole("button", {
+      name: "Casilla fila 9, columna 13, centro",
+    });
+    const dataTransfer = createDataTransfer({ rejectJson: true });
+
+    fireEvent.dragStart(tile, { dataTransfer });
+    fireEvent.dragEnter(centerCell, { dataTransfer });
+    fireEvent.dragOver(centerCell, { dataTransfer });
+    fireEvent.drop(centerCell, { dataTransfer });
+
+    expect(dataTransfer.dropEffect).toBe("move");
+    expect(centerCell).toHaveTextContent(tileLetter);
   });
 
   test("permite validar una sola ficha nueva después de la apertura", async () => {
@@ -256,7 +279,7 @@ describe("interacción entre el atril y el tablero", () => {
     await user.click(screen.getByRole("button", { name: "Abandonar partida" }));
 
     expect(
-      screen.getByRole("heading", { name: "Elegí cómo jugar" }),
+      screen.getByRole("heading", { name: "Elige cómo jugar" }),
     ).toBeInTheDocument();
   });
 });

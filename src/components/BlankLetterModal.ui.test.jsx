@@ -12,7 +12,7 @@ describe("BlankLetterModal", () => {
       />,
     );
 
-    const dialog = screen.getByRole("dialog", { name: "Elegí una letra" });
+    const dialog = screen.getByRole("dialog", { name: "Elige una letra" });
 
     expect(dialog.closest(".blank-modal")?.parentElement).toBe(document.body);
     expect(screen.getAllByRole("button", { name: /Usar el comodín como/i })).toHaveLength(27);

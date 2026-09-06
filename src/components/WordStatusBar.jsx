@@ -65,11 +65,12 @@ export default function WordStatusBar({
           </span>
         ) : (
           <span className="word-status-bar__hint">
-            Colocá fichas en el tablero para formar una palabra.
+            Coloca fichas en el tablero para formar una palabra.
           </span>
         )}
 
-        {statusMessage && (
+        {statusMessage &&
+          (pendingTileCount === 0 || statusMessage.type !== "success") && (
           <span
             className={`word-status-bar__message word-status-bar__message--${statusMessage.type}`}
           >

@@ -44,7 +44,7 @@ export default function Lobby() {
     const cleaned = names.map((name) => name.trim()).filter(Boolean);
 
     if (cleaned.length === 0) {
-      setError("Poné al menos un nombre para jugar.");
+      setError("Pon al menos un nombre para jugar.");
       return;
     }
     if (new Set(cleaned.map((name) => name.toLowerCase())).size !== cleaned.length) {
@@ -82,7 +82,7 @@ export default function Lobby() {
 
       <main className="lobby__card">
         <p className="app-title">Letra Liga</p>
-        <h1 className="lobby__heading">Elegí cómo jugar</h1>
+        <h1 className="lobby__heading">Elige cómo jugar</h1>
         <p className="lobby__subtitle">Puedes jugar aquí mismo o invitar a otras personas.</p>
 
         <div className="lobby__mode-tabs" aria-label="Modo de juego">

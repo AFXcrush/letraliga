@@ -24,9 +24,16 @@ export default function Rack({
 
   const handleDrop = (e) => {
     e.preventDefault();
-    const raw = e.dataTransfer.getData("application/json");
+    const raw =
+      e.dataTransfer.getData("application/json") ||
+      e.dataTransfer.getData("text/plain");
     if (!raw) return;
-    const tile = JSON.parse(raw);
+    let tile;
+    try {
+      tile = JSON.parse(raw);
+    } catch {
+      return;
+    }
     // Solo nos interesa si la ficha venía del tablero (from: {row, col}).
     if (tile.from && tile.from !== "rack") {
       onReturnTile?.(tile);

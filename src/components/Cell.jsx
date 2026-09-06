@@ -45,7 +45,7 @@ export default function Cell({
   const bonusClass = bonusTone ? ` cell--wild-${bonusTone}` : "";
 
   const handleDragOver = (e) => {
-    if (placedTile || isOpponentPending) return; // casilla ocupada, no acepta otra ficha
+    if (!onDropTile || placedTile || isOpponentPending) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
   };
@@ -53,18 +53,28 @@ export default function Cell({
   const handleDrop = (e) => {
     e.preventDefault();
     if (placedTile || isOpponentPending) return;
-    const raw = e.dataTransfer.getData("application/json");
+    const raw =
+      e.dataTransfer.getData("application/json") ||
+      e.dataTransfer.getData("text/plain");
     if (!raw) return;
-    const tile = JSON.parse(raw);
+    let tile;
+    try {
+      tile = JSON.parse(raw);
+    } catch {
+      return;
+    }
     onDropTile?.({ row, col, tile });
   };
 
   const handleDragStart = (e) => {
     if (!placedTile || !isPending) return; // las confirmadas quedan fijas
-    e.dataTransfer.setData(
-      "application/json",
-      JSON.stringify({ ...placedTile, from: { row, col } }),
-    );
+    const payload = JSON.stringify({ ...placedTile, from: { row, col } });
+    try {
+      e.dataTransfer.setData("application/json", payload);
+    } catch {
+      // El formato de respaldo se registra debajo.
+    }
+    e.dataTransfer.setData("text/plain", payload);
     e.dataTransfer.effectAllowed = "move";
   };
 

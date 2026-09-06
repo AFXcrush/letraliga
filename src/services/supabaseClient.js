@@ -3,9 +3,9 @@
 // perfectamente en modo local (pasar y jugar en un solo dispositivo).
 //
 // Para activar el modo online:
-//   1. Creá un proyecto en https://supabase.com
-//   2. Copiá .env.example a .env y completá las dos variables
-//   3. Ejecutá supabase/schema.sql desde el SQL Editor.
+//   1. Crea un proyecto en https://supabase.com
+//   2. Copia .env.example a .env y completa las dos variables
+//   3. Ejecuta supabase/schema.sql desde el SQL Editor.
 //   4. Las salas se administran desde services/onlineGameService.js.
 
 import { createClient } from "@supabase/supabase-js";

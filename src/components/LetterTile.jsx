@@ -11,10 +11,23 @@ export default function LetterTile({
 }) {
   const handleDragStart = (e) => {
     if (disabled) return;
-    e.dataTransfer.setData(
-      "application/json",
-      JSON.stringify({ id, letter, points, isBlank, from: "rack" }),
-    );
+    const payload = JSON.stringify({
+      id,
+      letter,
+      points,
+      isBlank,
+      from: "rack",
+    });
+
+    // Firefox y algunos navegadores basados en WebKit pueden ignorar tipos
+    // personalizados durante un arrastre. text/plain mantiene el movimiento
+    // disponible cuando application/json no se admite.
+    try {
+      e.dataTransfer.setData("application/json", payload);
+    } catch {
+      // El formato de respaldo se registra debajo.
+    }
+    e.dataTransfer.setData("text/plain", payload);
     e.dataTransfer.effectAllowed = "move";
   };
 

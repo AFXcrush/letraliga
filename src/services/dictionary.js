@@ -59,7 +59,7 @@ export async function checkWordExists(word, loadWordSet = getSpanishWordSet) {
     return {
       valid: false,
       word: normalized,
-      error: "No se pudo cargar el diccionario. Intentá de nuevo más tarde.",
+      error: "No se pudo cargar el diccionario. Inténtalo de nuevo más tarde.",
     };
   }
 }

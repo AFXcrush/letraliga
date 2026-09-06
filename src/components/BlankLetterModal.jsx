@@ -29,7 +29,7 @@ export default function BlankLetterModal({ open, onChoose, onClose }) {
       >
         <header className="bag-modal__header">
           <div>
-            <h2 id="blank-modal-title">Elegí una letra</h2>
+            <h2 id="blank-modal-title">Elige una letra</h2>
             <p>El comodín representará esta letra y seguirá valiendo 0 puntos.</p>
           </div>
           <button

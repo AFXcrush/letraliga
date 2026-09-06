@@ -9,6 +9,43 @@ const preview = {
 };
 
 describe("validación previa de palabra", () => {
+  test("oculta el resultado anterior mientras se prepara una nueva jugada", () => {
+    const { rerender } = render(
+      <WordStatusBar
+        pendingWordPreview={preview}
+        pendingTileCount={2}
+        isOpeningTurn
+        previewValidation={{
+          status: "valid",
+          words: [{ word: "xyzz", valid: true }],
+        }}
+        statusMessage={{ type: "success", text: "Luz: 12 puntos." }}
+      />,
+    );
+
+    expect(screen.queryByText(/Luz: 12 puntos/)).not.toBeInTheDocument();
+
+    rerender(
+      <WordStatusBar
+        pendingWordPreview={preview}
+        pendingTileCount={2}
+        isOpeningTurn
+        statusMessage={{ type: "error", text: "Revisa la conexión." }}
+      />,
+    );
+
+    expect(screen.getByText(/Revisa la conexión/)).toBeInTheDocument();
+
+    rerender(
+      <WordStatusBar
+        pendingTileCount={0}
+        statusMessage={{ type: "success", text: "Luz: 12 puntos." }}
+      />,
+    );
+
+    expect(screen.getByText(/Luz: 12 puntos/)).toBeInTheDocument();
+  });
+
   test("avisa y bloquea la confirmación cuando la palabra no existe", () => {
     render(
       <WordStatusBar

@@ -11,7 +11,7 @@ pnpm install
 pnpm dev
 ```
 
-Abrí la URL que te muestra Vite (por defecto `http://localhost:5173`).
+Abre la URL que muestra Vite (por defecto `http://localhost:5173`).
 
 ## Estructura del proyecto
 
@@ -150,13 +150,13 @@ partida y volver al lobby.
 
 Para habilitar el modo online:
 
-1. Creá un proyecto gratis en [supabase.com](https://supabase.com).
-2. Copiá `.env.example` a `.env` y completá `VITE_SUPABASE_URL` y
+1. Crea un proyecto gratis en [supabase.com](https://supabase.com).
+2. Copia `.env.example` a `.env` y completa `VITE_SUPABASE_URL` y
    `VITE_SUPABASE_PUBLISHABLE_KEY` (los encontrás en el diálogo Connect o en
    Project Settings → API Keys). También se admite `VITE_SUPABASE_ANON_KEY`
    para proyectos que todavía usen la clave pública heredada.
-3. Ejecutá `supabase/schema.sql` en el SQL Editor.
-4. Habilitá Anonymous Sign-Ins en Authentication. El script registra en
+3. Ejecuta `supabase/schema.sql` en el SQL Editor.
+4. Habilita Anonymous Sign-Ins en Authentication. El script registra en
    Realtime las tablas públicas necesarias.
 
 El esquema separa la bolsa y los atriles privados de los datos públicos y usa

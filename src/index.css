@@ -253,6 +253,25 @@ body {
   background: color-mix(in srgb, var(--coral) 62%, var(--cell-plain));
 }
 
+/* En el modo oscuro las bonificaciones libres se integran más con el tablero.
+   Al colocar una ficha recuperan el color completo mediante las reglas de
+   casilla ocupada que aparecen más abajo. */
+html.dark .cell--2L:not(.cell--occupied):not(.cell--opponent-pending) {
+  background: color-mix(in srgb, var(--blue) 24%, var(--cell-plain));
+}
+
+html.dark .cell--3L:not(.cell--occupied):not(.cell--opponent-pending) {
+  background: color-mix(in srgb, var(--gold) 24%, var(--cell-plain));
+}
+
+html.dark .cell--2W:not(.cell--occupied):not(.cell--opponent-pending) {
+  background: color-mix(in srgb, var(--green) 24%, var(--cell-plain));
+}
+
+html.dark .cell--3W:not(.cell--occupied):not(.cell--opponent-pending) {
+  background: color-mix(in srgb, var(--coral) 26%, var(--cell-plain));
+}
+
 .star-icon {
   width: calc(var(--cell-size, 32px) * 0.55);
   height: calc(var(--cell-size, 32px) * 0.55);
@@ -1007,6 +1026,15 @@ body {
   transition: transform 0.08s ease;
 }
 
+.letter-tile[draggable="true"] {
+  cursor: grab;
+  -webkit-user-drag: element;
+}
+
+.letter-tile[draggable="true"]:active {
+  cursor: grabbing;
+}
+
 .letter-tile:hover {
   transform: translateY(-3px);
 }
@@ -1585,24 +1613,27 @@ body {
 /* ---------- Fin de partida ---------- */
 .game-over {
   position: relative;
-  min-height: 100vh;
+  width: 100vw;
+  height: 100dvh;
+  min-height: 0;
   overflow: hidden;
   background: var(--bg-cream);
 }
 
 .game-over__board {
-  position: absolute;
+  position: fixed;
   inset: 0;
   display: grid;
   place-items: center;
-  padding: 18px;
+  padding: 0;
 }
 
 .game-over__board .panzoom-container {
-  width: 100%;
-  max-width: 1100px;
-  height: calc(100vh - 36px);
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
   border: 0;
+  border-radius: 0;
   background: transparent;
   display: grid;
   place-items: center;
@@ -1611,7 +1642,9 @@ body {
 .game-over__overlay {
   position: relative;
   z-index: 2;
-  min-height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow-y: auto;
   display: grid;
   align-items: center;
   justify-items: end;
@@ -1834,7 +1867,7 @@ body {
   box-shadow: 0 7px 20px rgba(25, 18, 34, 0.18);
 }
 
-.app-title {
+.app .app-title {
   position: fixed;
   top: 68px;
   left: 50%;
@@ -1903,7 +1936,7 @@ body {
     font-size: 11px;
   }
 
-  .app-title {
+  .app .app-title {
     top: 122px;
     font-size: 10px;
   }
