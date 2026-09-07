@@ -109,6 +109,10 @@ body {
 }
 
 .game-toolbar__options {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   min-height: 38px;
   padding: 0 11px;
   border: 1px solid var(--panel-border);
@@ -1931,57 +1935,242 @@ html.dark .cell--3W:not(.cell--occupied):not(.cell--opponent-pending) {
 @media (max-width: 700px) {
   .app__top-bar {
     position: fixed;
-    top: 8px;
-    left: 8px;
-    right: 8px;
+    top: max(8px, env(safe-area-inset-top));
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
     width: auto;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .app .score-counter {
+    min-width: 0;
+    min-height: 42px;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 7px;
+    overflow: hidden;
+  }
+
+  .app .score-counter__header {
+    min-width: 0;
+    gap: 3px;
+  }
+
+  .app .score-counter__label {
+    max-width: 56px;
+    overflow: hidden;
+    font-size: 8px;
+    line-height: 1.05;
+  }
+
+  .app .score-counter__inspect {
+    width: 28px;
+    height: 28px;
+  }
+
+  .app .score-counter__value {
+    flex: 0 0 auto;
+    font-size: 18px;
+  }
+
+  .app .score-counter__meanings {
+    flex: 0 0 auto;
+    width: 30px;
+    height: 30px;
+    margin: 0;
+    padding: 0;
+    justify-content: center;
+    font-size: 0;
+  }
+
+  .app .score-counter__meanings span {
+    font-size: 14px;
+  }
+
+  .app .game-toolbar {
+    flex: 0 0 auto;
+    gap: 6px;
+  }
+
+  .app .game-toolbar__options {
+    width: 42px;
+    height: 42px;
+    min-height: 42px;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .app .game-toolbar__options-icon {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .app .game-toolbar__options-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .app .theme-toggle {
+    width: 42px;
+    height: 42px;
   }
 
   .app .player-list {
-    top: 68px;
+    top: calc(max(8px, env(safe-area-inset-top)) + 50px);
     width: calc(100vw - 16px);
     max-width: none;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
     gap: 5px;
+    padding: 3px 2px 6px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+  }
+
+  .app .player-list::-webkit-scrollbar {
+    display: none;
   }
 
   .app .player-list__item {
+    flex: 0 0 auto;
     padding: 5px 9px;
     font-size: 11px;
+    scroll-snap-align: center;
+  }
+
+  .app .player-list__item--active {
+    padding: 4px 8px;
+  }
+
+  .app .player-list__item--active .player-list__name {
+    font-size: 12px;
+  }
+
+  .app .player-list__turn-label {
+    padding: 2px 4px;
+    font-size: 7px;
   }
 
   .app .app-title {
-    top: 122px;
-    font-size: 10px;
+    top: calc(max(8px, env(safe-area-inset-top)) + 94px);
+    max-width: calc(100vw - 24px);
+    padding: 4px 9px;
+    font-size: 9px;
   }
 
   .app .word-status-bar {
-    bottom: 142px;
-    gap: 7px;
-    padding: 8px 10px;
+    bottom: calc(110px + env(safe-area-inset-bottom));
+    width: calc(100vw - 16px);
+    gap: 5px;
+    padding: 7px 8px;
+    border-radius: 12px;
+  }
+
+  .app .word-status-bar__info {
+    gap: 2px;
+    max-height: 52px;
+    overflow-y: auto;
+  }
+
+  .app .word-status-bar__hint,
+  .app .word-status-bar__message {
+    font-size: 11px;
+  }
+
+  .app .word-status-bar__actions {
+    gap: 5px;
+  }
+
+  .app .word-status-bar__actions .btn {
+    min-height: 32px;
+    padding: 6px 9px;
+    font-size: 11px;
   }
 
   .app .rack-section {
-    bottom: 8px;
-    width: calc(100vw - 16px);
+    bottom: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "actions exchange"
+      "rack rack";
+    width: 100vw;
+    max-width: none;
     gap: 5px;
     padding: 6px;
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+    border-radius: 14px 14px 0 0;
+    transform: none;
   }
 
   .app .rack-actions {
+    grid-area: actions;
+    min-width: 0;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
     gap: 4px;
   }
 
   .app .rack-action {
-    padding: 5px 7px;
-    font-size: 10px;
+    min-height: 29px;
+    padding: 4px 6px;
+    font-size: 9px;
+    white-space: nowrap;
   }
 
   .app .rack {
-    order: 2;
-    flex-basis: 100%;
+    grid-area: rack;
+    width: 100%;
+    max-width: none;
+    flex-wrap: nowrap;
+    justify-content: center;
+    gap: clamp(3px, 1vw, 6px);
+    padding: 7px 6px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
   }
 
   .app .rack-action--exchange {
-    order: 1;
+    grid-area: exchange;
+  }
+
+  .app .letter-tile {
+    flex: 0 0 clamp(32px, calc((100vw - 64px) / 7), 44px);
+    width: clamp(32px, calc((100vw - 64px) / 7), 44px);
+    height: clamp(32px, calc((100vw - 64px) / 7), 44px);
+  }
+
+  .app .letter-tile__letter {
+    font-size: clamp(16px, 5.4vw, 20px);
+  }
+
+  .app .letter-tile__points {
+    right: 3px;
+    bottom: 2px;
+    font-size: 8px;
+  }
+}
+
+@media (max-width: 370px) {
+  .app .score-counter__label {
+    display: none;
+  }
+
+  .app .rack-action {
+    padding-inline: 4px;
+    font-size: 8px;
   }
 }

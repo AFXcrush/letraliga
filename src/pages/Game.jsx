@@ -158,8 +158,13 @@ export default function Game() {
             type="button"
             className="game-toolbar__options"
             onClick={() => setIsOptionsOpen(true)}
+            aria-label="Opciones de partida"
+            title="Opciones"
           >
-            ⚙ Opciones
+            <span className="game-toolbar__options-icon" aria-hidden="true">
+              ⚙
+            </span>
+            <span className="game-toolbar__options-label">Opciones</span>
           </button>
           <ThemeToggle darkMode={darkMode} onToggle={toggleDarkMode} />
         </div>
