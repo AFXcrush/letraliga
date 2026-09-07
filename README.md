@@ -1,8 +1,12 @@
 # Letra Liga
 
-Juego de palabras estilo Scrabble en español, hecho con React + Vite.
+Juego de palabras por turnos inspirado en Letter League, adaptado al español y
+con partidas locales u online de hasta cuatro jugadores. Está desarrollado con
+React, Vite y un backend opcional en Supabase.
 
-El trabajo pendiente y su orden recomendado están en [`PLAN.md`](PLAN.md).
+El juego incluye tablero completo, atriles privados, diccionario local,
+puntuación Wild, partidas cruzadas, temas claro y oscuro, sonido, animaciones y
+una interfaz adaptable a escritorio, tabletas y móviles.
 
 ## Cómo correrlo
 
@@ -22,12 +26,13 @@ src/
   index.css             Estilos globales (incluye tema claro/oscuro)
 
   context/
-    GameContext.jsx      Proveedor liviano de la API pública del juego
+    GameContext.jsx       Proveedor liviano de la API pública del juego
 
   game/
     constants.js         Reglas y fases compartidas
     finalScoring.js      Penalizaciones y transferencias del cierre
     gameSetup.js         Preparación independiente de jugadores y bolsa
+    onlineState.js       Estado público/privado seguro para partidas online
     tileExchange.js      Cambio seguro de fichas con la bolsa
     turnResult.js        Historial, mensajes y celebración de una jugada
 
@@ -38,11 +43,13 @@ src/
     useGamePersistence.js Guardado automático de la partida local
     useTileActions.js    Colocar, devolver, mezclar y asignar comodines
     useTurnActions.js    Validar, puntuar, confirmar y pasar turnos
+    useWordPreviewValidation.js  Validación anticipada de la jugada
 
   pages/
-    Lobby.jsx             Pantalla inicial: nombres de jugadores (1 a 4)
-    Game.jsx               Pantalla de juego: tablero + atril + jugadores
-    GameOver.jsx            Pantalla de resultados al terminar la partida
+    Lobby.jsx             Selector simplificado de partida local u online
+    OnlineRoom.jsx        Sala de espera online y código para invitados
+    Game.jsx              Pantalla de juego: tablero + atril + jugadores
+    GameOver.jsx          Tablero final, clasificación y revancha
 
   components/
     Board.jsx, Cell.jsx     Tablero y casillas (multiplicadores 2L/3L/2W/3W)
@@ -51,6 +58,7 @@ src/
     PlayerList.jsx           Lista de jugadores con su puntaje y turno activo
     ThemeToggle.jsx          Botón de luna/sol para el tema oscuro
     WordStatusBar.jsx        Vista previa de las palabras armadas + validación
+    WordCelebration.jsx      Aviso animado de jugada válida y puntaje
     BagContentsModal.jsx     Inventario de letras restantes en la bolsa
     ExchangeTilesModal.jsx   Selección y confirmación del cambio de fichas
     GameOptionsModal.jsx     Reiniciar o abandonar la partida
@@ -62,6 +70,8 @@ src/
     supabaseClient.js       Cliente opcional de Supabase
     gameStorage.js           Persistencia automática de la partida local
     onlineGameService.js     Autenticación, salas y suscripciones de Supabase
+    soundEffects.js          Sonidos de confirmación y victoria
+    wordMeanings.js          Consulta no bloqueante de Wikcionario
 
   layout/
     boardLayout.js          Grid de 19x27 con las casillas especiales
@@ -71,6 +81,9 @@ src/
     boardWords.js            Detecta la palabra principal y sus cruces, y suma
                               el puntaje completo de la jugada
     rackBalance.js           Mantiene el mínimo de vocales y consonantes
+    rackOrder.js             Reordenamiento manual del atril
+    tileDrag.js              Arrastre compatible con distintos navegadores
+    turnFlow.js              Última ronda y cierre por turnos sin palabras
 ```
 
 ## Reglas implementadas
@@ -125,6 +138,8 @@ src/
   alguien vació su atril, recibe la suma de las penalizaciones de sus rivales.
 - Las fichas pueden colocarse arrastrándolas o pulsando primero la ficha y luego
   la casilla. La segunda opción también funciona en pantallas táctiles.
+- Una ficha colocada durante el turno actual puede devolverse individualmente al
+  atril con doble clic. Las fichas ya confirmadas permanecen fijas.
 - Cada jugador puede ordenar manualmente las fichas de su atril o mezclarlas
   aunque esté esperando el turno; las acciones sobre el tablero siguen
   bloqueadas hasta que le corresponda jugar.
@@ -132,12 +147,16 @@ src/
   teclado se seleccionan fichas con Enter/Espacio y se recorren las casillas
   usando las flechas. Durante la partida el tablero ocupa toda la pantalla y
   los controles flotan encima con fondos translúcidos y sombra.
+- En la vista móvil, el atril utiliza todo el ancho disponible y mantiene las
+  siete fichas en una sola fila. Los jugadores forman una tira desplazable que
+  centra el turno activo y el menú de opciones se reduce a su icono.
 - Una confirmación válida muestra una celebración breve y anima las fichas de
   la palabra sin bloquear el siguiente turno. En el modo online aparece para
   todos los participantes, reproduce un aviso sonoro e indica quién jugó y
   cuántos puntos obtuvo. La última jugada permanece resaltada hasta que el
   siguiente jugador coloca su primera ficha.
 - De 1 a 4 jugadores, por turnos, con marcador visible para todos.
+- El sitio utiliza un favicon SVG propio con la ficha morada y la letra `Ñ`.
 
 ## Modo online con Supabase (opcional)
 
@@ -168,10 +187,10 @@ a una sala mediante un código de seis caracteres. El anfitrión inicia cuando h
 al menos dos jugadores y los cambios de tablero, marcador y turno se propagan
 mediante Realtime.
 
-Al terminar una partida online, cualquiera de los participantes que permanezca
-en la sala puede iniciar una revancha. Se conservan la sala y sus jugadores,
-pero se limpian el tablero, los puntajes y las jugadas anteriores antes de
-repartir fichas nuevas.
+Al terminar una partida, **Jugar otra vez** conserva a los participantes y
+comienza con tablero, puntajes y fichas nuevos. El botón **Lobby** permite salir
+y preparar otra partida con personas diferentes; en modo online también retira
+correctamente al jugador de la sala anterior.
 
 Mientras el jugador activo prepara su jugada, los demás ven únicamente fichas
 blancas en las coordenadas ocupadas. Las letras, sus puntos y sus identificadores
