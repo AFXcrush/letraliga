@@ -20,13 +20,28 @@ create table if not exists public.game_players (
   id uuid primary key default gen_random_uuid(),
   game_id uuid not null references public.games(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
-  name text not null check (char_length(name) between 1 and 20),
+  name text not null check (
+    char_length(name) between 1 and 12
+    and name ~ '^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+( [A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+)*$'
+  ),
   score integer not null default 0,
   turn_order smallint not null check (turn_order between 0 and 3),
   last_seen timestamptz not null default now(),
   unique (game_id, user_id),
   unique (game_id, turn_order)
 );
+
+-- Reemplaza la validación anterior también cuando la tabla ya existía. NOT
+-- VALID evita que nombres históricos bloqueen la actualización, pero protege
+-- inmediatamente todas las inserciones y modificaciones nuevas.
+alter table public.game_players
+  drop constraint if exists game_players_name_check;
+alter table public.game_players
+  add constraint game_players_name_check
+  check (
+    char_length(name) between 1 and 12
+    and name ~ '^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+( [A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+)*$'
+  ) not valid;
 
 -- Los atriles viven fuera de game_players para que una lectura de la lista de
 -- participantes nunca revele fichas privadas de otro jugador.
@@ -121,8 +136,9 @@ begin
   if (select auth.uid()) is null then
     raise exception 'Authentication required';
   end if;
-  if char_length(trim(player_name)) not between 1 and 20 then
-    raise exception 'Player name must contain between 1 and 20 characters';
+  if char_length(coalesce(trim(player_name), '')) not between 1 and 12
+    or coalesce(trim(player_name), '') !~ '^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+( [A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+)*$' then
+    raise exception 'Player name must use up to 12 letters or numbers without repeated spaces';
   end if;
 
   loop
@@ -165,8 +181,9 @@ begin
   if (select auth.uid()) is null then
     raise exception 'Authentication required';
   end if;
-  if char_length(trim(player_name)) not between 1 and 20 then
-    raise exception 'Player name must contain between 1 and 20 characters';
+  if char_length(coalesce(trim(player_name), '')) not between 1 and 12
+    or coalesce(trim(player_name), '') !~ '^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+( [A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9]+)*$' then
+    raise exception 'Player name must use up to 12 letters or numbers without repeated spaces';
   end if;
 
   select g.* into target_game

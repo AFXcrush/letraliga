@@ -29,10 +29,13 @@ describe("lobby online", () => {
     render(<Lobby />);
 
     await user.click(screen.getByRole("button", { name: /Online/ }));
-    await user.type(screen.getByPlaceholderText("¿Cómo te llamas?"), "Ana");
+    await user.type(
+      screen.getByPlaceholderText("¿Cómo te llamas?"),
+      "Pedro Perez",
+    );
     await user.click(screen.getByRole("button", { name: "Crear sala online" }));
 
-    expect(game.createOnlineSession).toHaveBeenCalledWith("Ana");
+    expect(game.createOnlineSession).toHaveBeenCalledWith("Pedro Perez");
   });
 
   test("normaliza visualmente el código antes de unirse", async () => {
@@ -60,5 +63,39 @@ describe("lobby online", () => {
     expect(screen.queryByRole("button", { name: "Empezar partida local" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Crear sala online" })).toBeVisible();
     expect(screen.queryByPlaceholderText("ABC123")).not.toBeInTheDocument();
+  });
+
+  test("limita los nombres a doce caracteres válidos", async () => {
+    const user = userEvent.setup();
+    render(<Lobby />);
+
+    const nameInput = screen.getByRole("textbox", {
+      name: "Nombre del jugador 1",
+    });
+    await user.type(nameInput, " Ana_123!!!JugadorExtra");
+
+    expect(nameInput).toHaveValue("Ana123Jugado");
+    expect(nameInput.value).toHaveLength(12);
+
+    await user.click(
+      screen.getByRole("button", { name: "Empezar partida local" }),
+    );
+    expect(game.startGame).toHaveBeenCalledWith(["Ana123Jugado"]);
+  });
+
+  test("no permite iniciar con espacios o símbolos", async () => {
+    const user = userEvent.setup();
+    render(<Lobby />);
+
+    await user.type(
+      screen.getByRole("textbox", { name: "Nombre del jugador 1" }),
+      " _-! ",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Empezar partida local" }),
+    );
+
+    expect(game.startGame).not.toHaveBeenCalled();
+    expect(screen.getByText("Pon al menos un nombre para jugar.")).toBeVisible();
   });
 });

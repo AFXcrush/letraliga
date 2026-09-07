@@ -2,6 +2,11 @@ import { useState } from "react";
 import ThemeToggle from "../components/ThemeToggle.jsx";
 import { useGame } from "../context/GameContext.jsx";
 import { isOnlineGameAvailable } from "../services/onlineGameService.js";
+import {
+  isValidPlayerName,
+  MAX_PLAYER_NAME_LENGTH,
+  sanitizePlayerName,
+} from "../utils/playerName.js";
 
 const MAX_PLAYERS = 4;
 
@@ -28,7 +33,10 @@ export default function Lobby() {
   };
 
   const updateName = (index, value) => {
-    setNames((prev) => prev.map((name, i) => (i === index ? value : name)));
+    const sanitized = sanitizePlayerName(value);
+    setNames((prev) =>
+      prev.map((name, i) => (i === index ? sanitized : name)),
+    );
   };
 
   const addPlayer = () => {
@@ -47,6 +55,12 @@ export default function Lobby() {
       setError("Pon al menos un nombre para jugar.");
       return;
     }
+    if (!cleaned.every(isValidPlayerName)) {
+      setError(
+        "Usa letras y números, sin espacios repetidos y con un máximo de 12 caracteres.",
+      );
+      return;
+    }
     if (new Set(cleaned.map((name) => name.toLowerCase())).size !== cleaned.length) {
       setError("Los nombres de los jugadores deben ser distintos.");
       return;
@@ -62,6 +76,12 @@ export default function Lobby() {
     const code = roomCode.trim();
     if (!name) {
       setError("Escribe tu nombre para jugar online.");
+      return;
+    }
+    if (!isValidPlayerName(name)) {
+      setError(
+        "Usa letras y números, sin espacios repetidos y con un máximo de 12 caracteres.",
+      );
       return;
     }
     if (onlineAction === "join" && !code) {
@@ -121,7 +141,7 @@ export default function Lobby() {
                   aria-label={`Nombre del jugador ${index + 1}`}
                   placeholder={`Jugador ${index + 1}`}
                   value={name}
-                  maxLength={20}
+                  maxLength={MAX_PLAYER_NAME_LENGTH}
                   onChange={(event) => updateName(index, event.target.value)}
                 />
                 {names.length > 1 && (
@@ -156,8 +176,10 @@ export default function Lobby() {
                 className="lobby__input"
                 placeholder="¿Cómo te llamas?"
                 value={onlineName}
-                maxLength={20}
-                onChange={(event) => setOnlineName(event.target.value)}
+                maxLength={MAX_PLAYER_NAME_LENGTH}
+                onChange={(event) =>
+                  setOnlineName(sanitizePlayerName(event.target.value))
+                }
               />
             </label>
 

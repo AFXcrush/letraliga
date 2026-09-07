@@ -156,6 +156,8 @@ src/
   cuántos puntos obtuvo. La última jugada permanece resaltada hasta que el
   siguiente jugador coloca su primera ficha.
 - De 1 a 4 jugadores, por turnos, con marcador visible para todos.
+- Los nombres admiten hasta 12 caracteres: letras, números y espacios simples
+  entre palabras, sin símbolos ni espacios repetidos.
 - El sitio utiliza un favicon SVG propio con la ficha morada y la letra `Ñ`.
 
 ## Modo online con Supabase (opcional)

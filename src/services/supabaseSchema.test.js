@@ -34,6 +34,23 @@ test("actualiza la sala recién creada sin referenciar variables inexistentes", 
   assert.doesNotMatch(createRoomFunction, /target_game/);
 });
 
+test("protege los nombres online con el mismo límite que el lobby", () => {
+  assert.match(
+    schema,
+    /game_players_name_check[\s\S]*char_length\(name\) between 1 and 12[\s\S]*not valid/,
+  );
+
+  const createRoomFunction = schema.match(
+    /create or replace function public\.create_game_room[\s\S]*?\n\$\$;/,
+  )?.[0];
+  const joinRoomFunction = schema.match(
+    /create or replace function public\.join_game_room[\s\S]*?\n\$\$;/,
+  )?.[0];
+
+  assert.match(createRoomFunction, /char_length[\s\S]*between 1 and 12/);
+  assert.match(joinRoomFunction, /char_length[\s\S]*between 1 and 12/);
+});
+
 test("la vista previa online publica posiciones pero no datos de fichas", () => {
   const previewFunction = schema.match(
     /create or replace function public\.preview_game_turn[\s\S]*?\n\$\$;/,
