@@ -43,7 +43,9 @@ export default function GameOver() {
     dismissCelebration,
     toggleDarkMode,
     resetToLobby,
+    startGame,
     startOnlineMatch,
+    leaveOnlineSession,
     isOnlineGame,
     checking,
     gameEndReason,
@@ -61,6 +63,23 @@ export default function GameOver() {
   const endedByPlayerLeaving =
     gameEndReason === GAME_END_REASONS.PLAYER_LEFT;
   const boardScale = getFinalBoardScale();
+  const playerNames = players.map(({ name }) => name);
+
+  const playAgain = () => {
+    if (isOnlineGame) {
+      startOnlineMatch();
+      return;
+    }
+    startGame(playerNames);
+  };
+
+  const goToLobby = () => {
+    if (isOnlineGame) {
+      leaveOnlineSession();
+      return;
+    }
+    resetToLobby();
+  };
 
   useEffect(() => {
     const victoryTimeout = window.setTimeout(playVictorySound, 500);
@@ -145,18 +164,24 @@ export default function GameOver() {
           </div>
         </div>
 
-        <button
-          type="button"
-          className="btn btn--primary lobby__submit"
-          onClick={isOnlineGame ? startOnlineMatch : resetToLobby}
-          disabled={checking}
-        >
-          {checking
-            ? "Preparando partida…"
-            : isOnlineGame
-              ? "Jugar otra vez"
-              : "Jugar otra partida"}
-        </button>
+        <div className="game-over__actions">
+          <button
+            type="button"
+            className="btn btn--primary lobby__submit"
+            onClick={playAgain}
+            disabled={checking}
+          >
+            {checking ? "Preparando partida…" : "Jugar otra vez"}
+          </button>
+          <button
+            type="button"
+            className="btn btn--ghost lobby__submit"
+            onClick={goToLobby}
+            disabled={checking}
+          >
+            Lobby
+          </button>
+        </div>
         </section>
       </div>
     </div>

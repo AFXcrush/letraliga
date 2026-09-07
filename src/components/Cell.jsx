@@ -35,6 +35,7 @@ export default function Cell({
   isCelebrating,
   onDropTile,
   onSelectCell,
+  onReturnPendingTile,
   isClickTarget,
 }) {
   const label = LABELS[type] ?? "";
@@ -82,8 +83,16 @@ export default function Cell({
       onClick={() => {
         if (!placedTile && !isOpponentPending) onSelectCell?.({ row, col });
       }}
+      onDoubleClick={() => {
+        if (!placedTile || !isPending) return;
+        onReturnPendingTile?.({
+          ...placedTile,
+          from: { row, col },
+        });
+      }}
       draggable={Boolean(placedTile) && isPending}
       onDragStart={handleDragStart}
+      title={isPending ? "Doble clic para devolver esta ficha al atril" : undefined}
       aria-label={`Casilla fila ${row}, columna ${col}${
         type === "star" ? ", centro" : label ? `, ${label}` : ""
       }`}

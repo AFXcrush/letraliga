@@ -199,6 +199,7 @@ export default function Game() {
             celebratingKeys={celebration?.cellsKeys ?? []}
             onDropTile={canTakeTurn ? placeTile : undefined}
             onSelectCell={canTakeTurn ? placeSelectedTile : undefined}
+            onReturnPendingTile={canTakeTurn ? returnTileToRack : undefined}
             hasSelectedTile={canTakeTurn && Boolean(selectedTile)}
           />
         )}

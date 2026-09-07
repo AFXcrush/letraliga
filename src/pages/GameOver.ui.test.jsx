@@ -2,10 +2,18 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import GameOver from "./GameOver.jsx";
 
-const { playVictorySound, resetToLobby, startOnlineMatch } = vi.hoisted(() => ({
+const {
+  playVictorySound,
+  resetToLobby,
+  startGame,
+  startOnlineMatch,
+  leaveOnlineSession,
+} = vi.hoisted(() => ({
   playVictorySound: vi.fn(),
   resetToLobby: vi.fn(),
+  startGame: vi.fn(),
   startOnlineMatch: vi.fn(),
+  leaveOnlineSession: vi.fn(),
 }));
 
 vi.mock("../services/soundEffects.js", () => ({
@@ -25,7 +33,9 @@ vi.mock("../context/GameContext.jsx", () => ({
     dismissCelebration: vi.fn(),
     toggleDarkMode: vi.fn(),
     resetToLobby,
+    startGame,
     startOnlineMatch,
+    leaveOnlineSession,
     isOnlineGame: true,
     checking: false,
     gameEndReason: "scoreless-turns",
@@ -37,7 +47,9 @@ describe("GameOver", () => {
     vi.useFakeTimers();
     playVictorySound.mockClear();
     resetToLobby.mockClear();
+    startGame.mockClear();
     startOnlineMatch.mockClear();
+    leaveOnlineSession.mockClear();
   });
 
   afterEach(() => vi.useRealTimers());
@@ -59,6 +71,16 @@ describe("GameOver", () => {
     fireEvent.click(screen.getByRole("button", { name: "Jugar otra vez" }));
 
     expect(startOnlineMatch).toHaveBeenCalledTimes(1);
+    expect(resetToLobby).not.toHaveBeenCalled();
+  });
+
+  it("permite salir de la partida terminada y volver al lobby", () => {
+    render(<GameOver />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Lobby" }));
+
+    expect(leaveOnlineSession).toHaveBeenCalledTimes(1);
+    expect(startOnlineMatch).not.toHaveBeenCalled();
     expect(resetToLobby).not.toHaveBeenCalled();
   });
 });

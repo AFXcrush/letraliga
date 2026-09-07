@@ -1755,6 +1755,16 @@ html.dark .cell--3W:not(.cell--occupied):not(.cell--opponent-pending) {
   font-size: 18px;
 }
 
+.game-over__actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.game-over__actions .lobby__submit {
+  margin-top: 0;
+}
+
 @media (max-width: 960px) {
   .game-over__overlay {
     align-items: end;

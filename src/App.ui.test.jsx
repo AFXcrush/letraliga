@@ -115,6 +115,26 @@ describe("interacción entre el atril y el tablero", () => {
     ).toBeEnabled();
   });
 
+  test("devuelve al atril una ficha pendiente con doble clic", async () => {
+    const user = await startGame();
+    const tile = getFirstRegularTile();
+    const tileLetter = tile.querySelector(".letter-tile__letter").textContent;
+    const centerCell = screen.getByRole("button", {
+      name: "Casilla fila 9, columna 13, centro",
+    });
+
+    await user.click(tile);
+    await user.click(centerCell);
+    expect(centerCell).toHaveTextContent(tileLetter);
+
+    await user.dblClick(centerCell);
+
+    expect(centerCell).not.toHaveTextContent(tileLetter);
+    expect(
+      screen.getByRole("button", { name: "Retornar al atril" }),
+    ).toBeDisabled();
+  });
+
   test("usa texto plano si el navegador rechaza el formato de arrastre JSON", async () => {
     await startGame();
     const tile = getFirstRegularTile();

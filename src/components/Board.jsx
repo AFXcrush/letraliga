@@ -10,6 +10,7 @@ export default function Board({
   celebratingKeys = [],
   onDropTile,
   onSelectCell,
+  onReturnPendingTile,
   hasSelectedTile = false,
 }) {
   const rows = BOARD_LAYOUT.length;
@@ -67,6 +68,7 @@ export default function Board({
               isCelebrating={celebratingKeys.includes(key)}
               onDropTile={onDropTile}
               onSelectCell={onSelectCell}
+              onReturnPendingTile={onReturnPendingTile}
               isClickTarget={hasSelectedTile && !tile && !isOpponentPending}
             />
           );
